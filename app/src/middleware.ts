@@ -12,7 +12,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Allow the login API and internal sync endpoints
-  if (pathname === '/api/login' || pathname === '/api/usda/sync') {
+  if (pathname === '/api/login' || pathname.startsWith('/api/usda/sync') || pathname.startsWith('/api/fiftyflowers')) {
     return NextResponse.next();
   }
 
