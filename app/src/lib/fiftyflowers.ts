@@ -21,29 +21,51 @@ export interface FiftyFlowersProduct {
   catalog_type: string | null;
 }
 
-// Map FiftyFlowers product_type to our catalog types
+// Map FiftyFlowers product_type (lowercased) to our catalog types.
+// Keys must match the lowercased product_type field from Shopify exactly.
 const FF_TYPE_MAP: Record<string, string> = {
-  'roses standard': 'standard roses',
-  'roses spray': 'spray roses',
-  'roses garden': 'garden roses',
-  'carnations': 'standard carnations',
-  'carnations mini': 'mini carnations',
-  'gerbera daisies': 'standard gerberas',
-  'hydrangea': 'hydrangea',
-  'tulips': 'tulips',
-  'ranunculus': 'ranunculus',
-  'peonies': 'peonies',
-  'dahlias': 'dahlias',
-  'sunflowers': 'sunflowers',
-  'delphinium': 'delphinium',
-  'stock': 'stock',
-  'snapdragons': 'snapdragons',
-  'alstroemeria': 'alstroemeria',
-  'lisianthus': 'lisianthus',
-  'eucalyptus': 'eucalyptus',
-  'ruscus': 'ruscus',
-  'filler flowers': 'filler',
-  'greenery': 'foliage',
+  // Roses
+  'roses standard':         'standard roses',
+  'vd roses standard':      'standard roses',   // Valentine's Day markup — still standard roses
+  'md roses standard':      'standard roses',   // Mother's Day markup
+  'roses spray':            'spray roses',
+  'roses sweetheart':       'spray roses',      // Sweetheart = small spray-type
+  'roses garden':           'garden roses',
+
+  // Carnations
+  'carnations':             'standard carnations',
+  'vd carnations vd':       'standard carnations',
+  'vd carnations':          'standard carnations',
+  'carnations mini':        'mini carnations',
+
+  // Gerberas
+  'gerbera daisies':        'standard gerberas',
+  'gerbera':                'standard gerberas',
+
+  // Other flowers
+  'hydrangea':              'hydrangea',
+  'hydrangeas':             'hydrangea',
+  'tulips':                 'tulips',
+  'vd tulips vd':           'tulips',
+  'ranunculus':             'ranunculus',
+  'peonies':                'peony',
+  'dahlias':                'dahlias',
+  'sunflowers':             'sunflowers',
+  'delphinium':             'delphinium',
+  'stock':                  'stock',
+  'snapdragons':            'snapdragons',
+  'alstroemeria':           'alstroemeria',
+  'alstroemerias':          'alstroemeria',     // FF uses plural
+  'lisianthus':             'lisianthus',
+  'disbud':                 'spider mums',       // Disbud = large single-stem mum
+  'pompom':                 'button poms',
+  'berries':                'hypericum',         // Hypericum berries
+
+  // Foliage
+  'eucalyptus':             'eucalyptus',
+  'ruscus':                 'ruscus',
+  'greens':                 'greens',            // FF uses "Greens" not "Greenery"
+  'greenery':               'greens',
 };
 
 // Collections to scrape
