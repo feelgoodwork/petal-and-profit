@@ -11,12 +11,9 @@ export async function GET() {
         (SELECT MIN(unit_cost) FROM ingredient_costs WHERE flower_id = fc.id) as min_cost,
         (SELECT MAX(unit_cost) FROM ingredient_costs WHERE flower_id = fc.id) as max_cost,
         (SELECT COUNT(*) FROM ingredient_costs WHERE flower_id = fc.id) as cost_count,
-        CASE
-          WHEN fc.category = 'foliage' THEN 'bunch'
-          ELSE 'stem'
-        END as price_unit
+        CASE WHEN fc.category = 'foliage' THEN 'bunch' ELSE 'stem' END as price_unit
       FROM flower_catalog fc
-      ORDER BY fc.category, fc.canonical_name
+      ORDER BY fc.category, COALESCE(fc.base_type, fc.canonical_name), fc.canonical_name
     `;
     return Response.json(entries);
   } catch {

@@ -39,6 +39,14 @@ export async function GET(
       ORDER BY ic.invoice_date DESC
     `;
 
+    // Stem size breakdown (only for entries that have size data)
+    const stemSizes = await sql`
+      SELECT stem_size_cm, COUNT(*) as count, ROUND(AVG(unit_cost)::numeric, 2) as avg_cost
+      FROM ingredient_costs
+      WHERE flower_id = ${numId} AND stem_size_cm IS NOT NULL
+      GROUP BY stem_size_cm ORDER BY stem_size_cm
+    `;
+
     const recipeUsage = await sql`
       SELECT ri.*, r.name as recipe_name, r.sell_price
       FROM recipe_ingredients ri
@@ -47,12 +55,41 @@ export async function GET(
       ORDER BY r.name
     `;
 
+    // USDA benchmark — try exact canonical_name first, then base_type fallback
+    const canonicalName = String(entry.canonical_name);
+    const baseType = entry.base_type ? String(entry.base_type) : canonicalName;
+
+    const usdaResults = await sql`
+      SELECT * FROM usda_benchmarks
+      WHERE catalog_type = ${canonicalName} OR catalog_type = ${baseType}
+      ORDER BY report_date DESC LIMIT 5
+    `;
+
+    // FF benchmark — canonical_name first, then base_type fallback
+    const ffResults = await sql`
+      SELECT * FROM fiftyflowers_benchmarks
+      WHERE (catalog_type = ${canonicalName} OR catalog_type = ${baseType})
+        AND price_per_stem IS NOT NULL
+      ORDER BY price_per_stem
+    `;
+    const ffPrices = ffResults.map(r => Number(r.price_per_stem));
+    const ffBenchmark = ffPrices.length > 0 ? {
+      avg_per_stem: ffPrices.reduce((a, b) => a + b, 0) / ffPrices.length,
+      min_per_stem: Math.min(...ffPrices),
+      max_per_stem: Math.max(...ffPrices),
+      count: ffPrices.length,
+      note: ffResults[0]?.catalog_type !== canonicalName ? `Showing ${baseType} retail data` : undefined,
+    } : null;
+
     return Response.json({
       ...entry,
       aliases,
       line_items: lineItems,
       costs,
+      stem_sizes: stemSizes,
       recipe_usage: recipeUsage,
+      usda: usdaResults.length > 0 ? usdaResults[0] : null,
+      ff_benchmark: ffBenchmark,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

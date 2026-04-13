@@ -1,6 +1,8 @@
 /**
  * Rebuild flower catalog + match recipe ingredients + match invoice line items.
- * Replaces POST /api/catalog (which times out on Vercel for large datasets).
+ * Color-aware: "red roses", "white roses", "blue delphinium" etc. are separate entries.
+ * Stem size (cm) is extracted from invoice descriptions and stored in ingredient_costs.
+ *
  * Usage: node scripts/rebuild-catalog.js
  */
 const { Client } = require('pg');
@@ -16,7 +18,7 @@ if (fs.existsSync(envPath)) {
 }
 
 // ---------------------------------------------------------------------------
-// Inline port of variety-lookup.ts + name-normalizer.ts
+// Classification logic (mirrors variety-lookup.ts)
 // ---------------------------------------------------------------------------
 
 const ROSE_VARIETIES = {
@@ -29,39 +31,39 @@ const ROSE_VARIETIES = {
   'mondial':           { type: 'standard roses', color: 'white' },
   'akito':             { type: 'standard roses', color: 'white' },
   'tibet':             { type: 'standard roses', color: 'white' },
-  'vendela':           { type: 'standard roses', color: 'cream/ivory' },
-  'rosita vendela':    { type: 'standard roses', color: 'cream/ivory' },
-  'sahara':            { type: 'standard roses', color: 'cream/sand' },
+  'vendela':           { type: 'standard roses', color: 'cream' },
+  'rosita vendela':    { type: 'standard roses', color: 'cream' },
+  'sahara':            { type: 'standard roses', color: 'cream' },
+  'creme de la creme': { type: 'standard roses', color: 'cream' },
   'brighton':          { type: 'standard roses', color: 'peach' },
   'tara':              { type: 'standard roses', color: 'peach' },
   'faith':             { type: 'standard roses', color: 'peach' },
-  'shimmer':           { type: 'standard roses', color: 'peach/light pink' },
+  'tiffany':           { type: 'standard roses', color: 'peach' },
+  'shimmer':           { type: 'standard roses', color: 'light pink' },
   'nena':              { type: 'standard roses', color: 'light pink' },
   'nina':              { type: 'standard roses', color: 'light pink' },
   'mother of pearl':   { type: 'standard roses', color: 'light pink' },
   'pink martini':      { type: 'standard roses', color: 'pink' },
   'senorita':          { type: 'standard roses', color: 'pink' },
   'engagement':        { type: 'standard roses', color: 'pink' },
-  'vintage pink':      { type: 'standard roses', color: 'antique pink' },
-  'secret garden':     { type: 'standard roses', color: 'pink blend' },
-  'deep purple':       { type: 'standard roses', color: 'deep purple' },
+  'vintage pink':      { type: 'standard roses', color: 'pink' },
+  'secret garden':     { type: 'standard roses', color: 'pink' },
+  'deja vu':           { type: 'standard roses', color: 'pink' },
+  'deep purple':       { type: 'standard roses', color: 'purple' },
   'ocean song':        { type: 'standard roses', color: 'lavender' },
   'polo':              { type: 'standard roses', color: 'lavender' },
-  'country blues':     { type: 'standard roses', color: 'lavender/blue' },
+  'country blues':     { type: 'standard roses', color: 'lavender' },
   'proud':             { type: 'standard roses', color: 'hot pink' },
   'gotcha':            { type: 'standard roses', color: 'hot pink' },
   'pink floyd':        { type: 'standard roses', color: 'hot pink' },
-  'cancun':            { type: 'standard roses', color: 'orange/hot pink' },
-  'high & flame':      { type: 'standard roses', color: 'orange/yellow bicolor' },
-  'high magic':        { type: 'standard roses', color: 'orange/yellow bicolor' },
-  'free spirit':       { type: 'standard roses', color: 'coral/peach' },
+  'cancun':            { type: 'standard roses', color: 'orange' },
   'orange crush':      { type: 'standard roses', color: 'orange' },
-  'coffee break':      { type: 'standard roses', color: 'copper/brown' },
+  'high & flame':      { type: 'standard roses', color: 'orange' },
+  'high magic':        { type: 'standard roses', color: 'orange' },
+  'free spirit':       { type: 'standard roses', color: 'coral' },
+  'coffee break':      { type: 'standard roses', color: 'copper' },
   'iguana':            { type: 'standard roses', color: 'green' },
-  'deja vu':           { type: 'standard roses', color: 'dusty pink' },
-  'creme de la creme': { type: 'standard roses', color: 'cream' },
   'new yellow':        { type: 'standard roses', color: 'yellow' },
-  'tiffany':           { type: 'standard roses', color: 'peach/pink' },
   'malibu':            { type: 'standard roses', color: 'pink' },
 };
 
@@ -75,7 +77,7 @@ const PRODUCT_TYPES = {
   'standard gerberas':     { category: 'flower', searchTerms: ['gerbera', 'gerberas', 'gerber'] },
   'mini gerberas':         { category: 'flower', searchTerms: ['mini gerbera', 'germini'] },
   'asiatic lilies':        { category: 'flower', searchTerms: ['asiatic lil'] },
-  'oriental lilies':       { category: 'flower', searchTerms: ['oriental lil', 'casablanca', 'stargazer'] },
+  'oriental lilies':       { category: 'flower', searchTerms: ['oriental lil', 'casablanca', 'stargazer', 'sorbonne'] },
   'hybrid lilies':         { category: 'flower', searchTerms: ['hybrid lil'] },
   'calla lilies':          { category: 'flower', searchTerms: ['calla'] },
   'button poms':           { category: 'flower', searchTerms: ['button pom', 'kermit'] },
@@ -96,7 +98,7 @@ const PRODUCT_TYPES = {
   'gladiolus':             { category: 'flower', searchTerms: ['gladiolus', 'glads', 'glad'] },
   'limonium':              { category: 'flower', searchTerms: ['limonium', 'caspia'] },
   'aster':                 { category: 'flower', searchTerms: ['aster', 'monte casino'] },
-  'gypsophila':            { category: 'flower', searchTerms: ['gypsophila', 'baby\'s breath', 'babies breath', 'gyp', 'gyps'] },
+  'gypsophila':            { category: 'flower', searchTerms: ["gypsophila", "baby's breath", 'babies breath', 'gyp', 'gyps'] },
   'lisianthus':            { category: 'flower', searchTerms: ['lisianthus', 'lisiant'] },
   'sunflowers':            { category: 'flower', searchTerms: ['sunflower'] },
   'larkspur':              { category: 'flower', searchTerms: ['larkspur', 'lark'] },
@@ -119,14 +121,27 @@ const PRODUCT_TYPES = {
   'greens':                { category: 'foliage', searchTerms: ['greens', 'mixed greens'] },
 };
 
-const FOLIAGE_TYPES = new Set(['foliage']);
+// Types where color creates a separate catalog entry
+const COLOR_MATTERS = {
+  'standard roses': 'roses', 'spray roses': 'spray roses', 'garden roses': 'garden roses',
+  'miniature spray roses': 'miniature spray roses',
+  'standard carnations': 'carnations', 'mini carnations': 'mini carnations',
+  'standard gerberas': 'gerberas', 'mini gerberas': 'mini gerberas',
+  'asiatic lilies': 'asiatic lilies', 'oriental lilies': 'oriental lilies',
+  'hybrid lilies': 'hybrid lilies', 'calla lilies': 'calla lilies',
+  'tulips': 'tulips', 'snapdragons': 'snapdragons', 'stock': 'stock',
+  'delphinium': 'delphinium', 'statice': 'statice',
+  'daisy poms': 'daisy poms', 'button poms': 'button poms',
+  'alstroemeria': 'alstroemeria',
+};
+
 const COLORS = [
-  'hot pink','light pink','pale pink','dusty pink','antique pink',
-  'deep purple','dark orange','deep coral','lime-green','lime green',
-  'apple-green','golden yellow','antique green','pale green','pale peach',
-  'red','white','pink','yellow','orange','purple','lavender',
-  'blue','fuchsia','coral','peach','green','ivory','copper',
-  'bronze','burgundy','rust','cream','black',
+  'hot pink', 'light pink', 'pale pink', 'dusty pink', 'antique pink',
+  'deep purple', 'dark orange', 'deep coral', 'lime green', 'pale green',
+  'golden yellow', 'antique green', 'pale peach',
+  'red', 'white', 'pink', 'yellow', 'orange', 'purple', 'lavender',
+  'blue', 'fuchsia', 'coral', 'peach', 'green', 'ivory', 'copper',
+  'bronze', 'burgundy', 'rust', 'cream', 'black',
 ];
 
 function extractColor(text) {
@@ -137,36 +152,102 @@ function extractColor(text) {
   return null;
 }
 
+function buildCanonicalName(baseType, color) {
+  if (!color) return baseType;
+  const shortType = COLOR_MATTERS[baseType];
+  if (!shortType) return baseType; // foliage or single-color types
+  return `${color} ${shortType}`;
+}
+
+function extractStemSize(description) {
+  const match = description.match(/\b(\d{2,3})\s*(?:cm|CM)\b/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
 function classifyProductType(description) {
   const lower = description.toLowerCase();
 
-  // Rose variety check first (most specific)
-  const sorted = Object.entries(ROSE_VARIETIES).sort((a, b) => b[0].length - a[0].length);
-  for (const [variety, info] of sorted) {
-    if (lower.includes(variety)) return { type: info.type, color: info.color, variety };
+  // 1. Rose variety lookup (most specific)
+  const sortedVarieties = Object.entries(ROSE_VARIETIES).sort((a, b) => b[0].length - a[0].length);
+  for (const [variety, info] of sortedVarieties) {
+    if (lower.includes(variety)) {
+      const baseType = info.type;
+      const color = info.color;
+      return { baseType, canonicalName: buildCanonicalName(baseType, color), color, variety, category: 'flower' };
+    }
   }
 
-  if (/miniature spray|mini spray/i.test(lower)) return { type: 'miniature spray roses', color: extractColor(lower), variety: null };
-  if (/spray\s*rose/i.test(lower)) return { type: 'spray roses', color: extractColor(lower), variety: null };
-  if (/garden\s*rose/i.test(lower)) return { type: 'garden roses', color: extractColor(lower), variety: null };
-  if (/mini\s*carn|mint\s*carn|minicum/i.test(lower)) return { type: 'mini carnations', color: extractColor(lower), variety: null };
-  if (/mini\s*gerb|germini/i.test(lower)) return { type: 'mini gerberas', color: extractColor(lower), variety: null };
-  if (/asiatic/i.test(lower)) return { type: 'asiatic lilies', color: extractColor(lower), variety: null };
-  if (/casablanca|stargazer|oriental\s*lil/i.test(lower)) return { type: 'oriental lilies', color: extractColor(lower), variety: null };
-  if (/sorbonne/i.test(lower)) return { type: 'oriental lilies', color: 'pink', variety: 'sorbonne' };
-  if (/hybrid\s*lil/i.test(lower)) return { type: 'hybrid lilies', color: extractColor(lower), variety: null };
-  if (/calla/i.test(lower)) return { type: 'calla lilies', color: extractColor(lower), variety: null };
-  if (/button\s*pom|kermit/i.test(lower)) return { type: 'button poms', color: extractColor(lower), variety: null };
-  if (/daisy\s*(pom|mum)/i.test(lower)) return { type: 'daisy poms', color: extractColor(lower), variety: null };
-  if (/spider\s*mum|fuji/i.test(lower)) return { type: 'spider mums', color: extractColor(lower), variety: null };
+  // 2. Rose subtypes
+  if (/miniature spray|mini spray/i.test(lower)) {
+    const bt = 'miniature spray roses', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
+  if (/spray\s*rose/i.test(lower)) {
+    const bt = 'spray roses', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
+  if (/garden\s*rose/i.test(lower)) {
+    const bt = 'garden roses', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
 
-  // Broader product types (longest search term first)
+  // 3. Mini carnations before standard
+  if (/mini\s*carn|mint\s*carn|minicum/i.test(lower)) {
+    const bt = 'mini carnations', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
+
+  // 4. Mini gerberas
+  if (/mini\s*gerb|germini/i.test(lower)) {
+    const bt = 'mini gerberas', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
+
+  // 5. Lily subtypes
+  if (/asiatic/i.test(lower)) {
+    const bt = 'asiatic lilies', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
+  if (/casablanca|stargazer|oriental\s*lil|sorbonne/i.test(lower)) {
+    const bt = 'oriental lilies', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
+  if (/hybrid\s*lil/i.test(lower)) {
+    const bt = 'hybrid lilies', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
+  if (/calla/i.test(lower)) {
+    const bt = 'calla lilies', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
+
+  // 6. Pom subtypes
+  if (/button\s*pom|kermit/i.test(lower)) {
+    const bt = 'button poms', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
+  if (/daisy\s*(pom|mum)/i.test(lower)) {
+    const bt = 'daisy poms', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
+  if (/spider\s*mum|fuji/i.test(lower)) {
+    const bt = 'spider mums', c = extractColor(lower);
+    return { baseType: bt, canonicalName: buildCanonicalName(bt, c), color: c, variety: null, category: 'flower' };
+  }
+
+  // 7. Broader types (longest search term wins)
   const sortedTypes = Object.entries(PRODUCT_TYPES)
-    .sort((a, b) => Math.max(...b[1].searchTerms.map(t => t.length)) - Math.max(...a[1].searchTerms.map(t => t.length)));
+    .sort((a, b) =>
+      Math.max(...b[1].searchTerms.map(t => t.length)) -
+      Math.max(...a[1].searchTerms.map(t => t.length))
+    );
 
-  for (const [type, info] of sortedTypes) {
+  for (const [baseType, info] of sortedTypes) {
     for (const term of info.searchTerms) {
-      if (lower.includes(term)) return { type, color: extractColor(lower), variety: null };
+      if (lower.includes(term)) {
+        const color = info.category === 'foliage' ? null : extractColor(lower);
+        return { baseType, canonicalName: buildCanonicalName(baseType, color), color, variety: null, category: info.category };
+      }
     }
   }
 
@@ -181,29 +262,32 @@ async function main() {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
 
-  // ---- Step 1: Rebuild catalog from recipe ingredients ----
+  // ---- Step 1: Wipe and rebuild catalog ----
   console.log('\n[1/3] Rebuilding flower catalog...');
   await client.query('DELETE FROM flower_aliases');
   await client.query('DELETE FROM ingredient_costs');
-  await client.query('UPDATE recipe_ingredients SET flower_id = NULL, match_status = \'pending\', match_confidence = NULL');
+  await client.query("UPDATE recipe_ingredients SET flower_id = NULL, match_status = 'pending', match_confidence = NULL");
   await client.query('DELETE FROM flower_catalog');
 
-  const { rows: ingredients } = await client.query('SELECT DISTINCT ingredient_name, is_foliage FROM recipe_ingredients');
+  const { rows: ingredients } = await client.query(
+    'SELECT DISTINCT ingredient_name, is_foliage FROM recipe_ingredients'
+  );
   console.log(`  Processing ${ingredients.length} unique ingredient names...`);
 
-  const catalogEntries = new Map(); // canonical_name -> category
+  // Build catalog entries (canonical_name → { category, base_type })
+  const catalogEntries = new Map();
   for (const ing of ingredients) {
-    const classification = classifyProductType(ing.ingredient_name);
-    if (!classification) continue;
-    const category = ing.is_foliage ? 'foliage' : (PRODUCT_TYPES[classification.type]?.category || 'flower');
-    catalogEntries.set(classification.type, category);
+    const cl = classifyProductType(ing.ingredient_name);
+    if (!cl) continue;
+    // Force foliage flag from recipe if set
+    const category = ing.is_foliage ? 'foliage' : cl.category;
+    catalogEntries.set(cl.canonicalName, { category, base_type: cl.baseType });
   }
 
-  // Batch insert catalog entries
-  for (const [name, category] of catalogEntries) {
+  for (const [name, info] of catalogEntries) {
     await client.query(
-      'INSERT INTO flower_catalog (canonical_name, category) VALUES ($1, $2) ON CONFLICT (canonical_name) DO NOTHING',
-      [name, category]
+      'INSERT INTO flower_catalog (canonical_name, category, base_type) VALUES ($1, $2, $3) ON CONFLICT (canonical_name) DO UPDATE SET base_type = EXCLUDED.base_type',
+      [name, info.category, info.base_type]
     );
   }
   console.log(`  Created ${catalogEntries.size} catalog entries`);
@@ -213,21 +297,21 @@ async function main() {
   const { rows: catalog } = await client.query('SELECT id, canonical_name FROM flower_catalog');
   const catalogMap = new Map(catalog.map(c => [c.canonical_name, c.id]));
 
-  const { rows: allIngredients } = await client.query('SELECT id, ingredient_name, is_foliage FROM recipe_ingredients WHERE flower_id IS NULL');
-  let matched = 0, unmatched = 0;
+  const { rows: allIngredients } = await client.query(
+    'SELECT id, ingredient_name FROM recipe_ingredients WHERE flower_id IS NULL'
+  );
 
-  // Group by product type to do fewer queries
-  const byType = new Map(); // type -> [ingredient_id, ...]
+  let matched = 0, unmatched = 0;
+  const byFlower = new Map(); // flowerId → [ingredientId, ...]
   for (const ing of allIngredients) {
-    const classification = classifyProductType(ing.ingredient_name);
-    if (!classification || !catalogMap.has(classification.type)) { unmatched++; continue; }
-    const flowerId = catalogMap.get(classification.type);
-    if (!byType.has(flowerId)) byType.set(flowerId, []);
-    byType.get(flowerId).push(ing.id);
+    const cl = classifyProductType(ing.ingredient_name);
+    if (!cl || !catalogMap.has(cl.canonicalName)) { unmatched++; continue; }
+    const flowerId = catalogMap.get(cl.canonicalName);
+    if (!byFlower.has(flowerId)) byFlower.set(flowerId, []);
+    byFlower.get(flowerId).push(ing.id);
   }
 
-  // Batch update: one query per catalog type
-  for (const [flowerId, ids] of byType) {
+  for (const [flowerId, ids] of byFlower) {
     const placeholders = ids.map((_, i) => `$${i + 2}`).join(',');
     await client.query(
       `UPDATE recipe_ingredients SET flower_id = $1, match_status = 'auto_matched', match_confidence = 0.9 WHERE id IN (${placeholders})`,
@@ -246,25 +330,27 @@ async function main() {
     WHERE li.is_flower = 1
   `);
 
-  // Group by (flower_id, vendor_id) for batch alias inserts
-  const aliasRows = [];
-  const costRows = [];
+  const aliasRows = [];   // [flowerId, alias, vendorId, confidence]
+  const costRows = [];    // [flowerId, vendorId, unitCost, costPer, lineItemId, invoiceDate, stemSizeCm]
   let liMatched = 0, liUnmatched = 0;
 
   for (const item of lineItems) {
-    const classification = classifyProductType(item.description);
-    if (!classification || !catalogMap.has(classification.type)) { liUnmatched++; continue; }
-    const flowerId = catalogMap.get(classification.type);
+    const cl = classifyProductType(item.description);
+    if (!cl || !catalogMap.has(cl.canonicalName)) { liUnmatched++; continue; }
+    const flowerId = catalogMap.get(cl.canonicalName);
+    const stemSize = extractStemSize(item.description);
+
     aliasRows.push([flowerId, item.description, item.vendor_id, 0.9]);
     const costValue = item.cost_per_stem ?? item.unit_price;
     if (costValue != null && Number(costValue) > 0) {
-      costRows.push([flowerId, item.vendor_id, Number(costValue), 'stem', item.id, item.invoice_date]);
+      costRows.push([flowerId, item.vendor_id, Number(costValue), 'stem', item.id, item.invoice_date, stemSize]);
     }
     liMatched++;
   }
 
-  // Batch insert aliases (100 at a time)
   const batchSize = 100;
+
+  // Batch insert aliases
   for (let i = 0; i < aliasRows.length; i += batchSize) {
     const batch = aliasRows.slice(i, i + batchSize);
     const values = [];
@@ -279,33 +365,53 @@ async function main() {
     );
   }
 
-  // Batch insert costs (100 at a time)
+  // Batch insert costs (with stem_size_cm)
   for (let i = 0; i < costRows.length; i += batchSize) {
     const batch = costRows.slice(i, i + batchSize);
     const values = [];
     const placeholders = batch.map((_, j) => {
-      const o = j * 6;
+      const o = j * 7;
       values.push(...batch[j]);
-      return `($${o+1},$${o+2},$${o+3},$${o+4},$${o+5},$${o+6})`;
+      return `($${o+1},$${o+2},$${o+3},$${o+4},$${o+5},$${o+6},$${o+7})`;
     });
     await client.query(
-      `INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date) VALUES ${placeholders.join(',')}`,
+      `INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date, stem_size_cm) VALUES ${placeholders.join(',')}`,
       values
     );
   }
 
   console.log(`  Line items matched: ${liMatched}, unmatched: ${liUnmatched}`);
-  console.log(`  Aliases created: ${aliasRows.length}, cost records: ${costRows.length}`);
+  console.log(`  Aliases: ${aliasRows.length}, cost records: ${costRows.length}`);
 
   // ---- Summary ----
   const { rows: [stats] } = await client.query(`
     SELECT
-      (SELECT COUNT(*) FROM flower_catalog) as catalog_entries,
+      (SELECT COUNT(*) FROM flower_catalog) as total,
+      (SELECT COUNT(*) FROM flower_catalog WHERE category = 'flower') as flowers,
+      (SELECT COUNT(*) FROM flower_catalog WHERE category = 'foliage') as foliage,
+      (SELECT COUNT(DISTINCT base_type) FROM flower_catalog) as base_types,
       (SELECT COUNT(*) FROM recipe_ingredients WHERE flower_id IS NOT NULL) as ingredients_matched,
       (SELECT COUNT(*) FROM flower_aliases) as aliases,
-      (SELECT COUNT(*) FROM ingredient_costs) as cost_records
+      (SELECT COUNT(*) FROM ingredient_costs) as cost_records,
+      (SELECT COUNT(*) FROM ingredient_costs WHERE stem_size_cm IS NOT NULL) as with_stem_size
   `);
-  console.log(`\nDone. Catalog: ${stats.catalog_entries} entries, ${stats.ingredients_matched} ingredients matched, ${stats.aliases} aliases, ${stats.cost_records} cost records`);
+  console.log(`\nDone.`);
+  console.log(`  Catalog: ${stats.total} entries (${stats.flowers} flowers, ${stats.foliage} foliage) across ${stats.base_types} base types`);
+  console.log(`  Recipe ingredients matched: ${stats.ingredients_matched}`);
+  console.log(`  Aliases: ${stats.aliases}, cost records: ${stats.cost_records} (${stats.with_stem_size} with stem size)`);
+
+  // Show sample color breakdown for roses
+  const { rows: roseSample } = await client.query(`
+    SELECT canonical_name, base_type,
+      (SELECT COUNT(*) FROM ingredient_costs ic2 WHERE ic2.flower_id = fc.id) as cost_records
+    FROM flower_catalog fc WHERE base_type = 'standard roses' ORDER BY canonical_name
+  `);
+  if (roseSample.length) {
+    console.log('\n  Standard roses breakdown:');
+    for (const r of roseSample) {
+      console.log(`    ${r.canonical_name.padEnd(30)} ${r.cost_records} cost records`);
+    }
+  }
 
   await client.end();
 }

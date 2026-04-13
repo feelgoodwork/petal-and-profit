@@ -1,5 +1,5 @@
 import { getDb } from '@/lib/db';
-import { normalizeName } from './name-normalizer';
+import { classifyProductType, PRODUCT_TYPES } from './variety-lookup';
 
 type Row = Record<string, unknown>;
 
@@ -13,38 +13,51 @@ export async function rebuildCatalog(): Promise<{ created: number; skipped: numb
 
   const ingredients = await sql`SELECT DISTINCT ingredient_name, is_foliage FROM recipe_ingredients` as Row[];
 
-  let created = 0;
-  let skipped = 0;
-
+  const entries = new Map<string, { category: string; baseType: string }>();
   for (const ing of ingredients) {
-    const { productType } = normalizeName(String(ing.ingredient_name));
-    if (!productType) { skipped++; continue; }
+    const cl = classifyProductType(String(ing.ingredient_name));
+    if (!cl) continue;
+    const category = ing.is_foliage ? 'foliage' : cl.category;
+    entries.set(cl.canonicalName, { category, baseType: cl.baseType });
+  }
 
-    const category = ing.is_foliage ? 'foliage' : 'flower';
-    await sql`INSERT INTO flower_catalog (canonical_name, category) VALUES (${productType}, ${category}) ON CONFLICT (canonical_name) DO NOTHING`;
+  let created = 0;
+  for (const [name, info] of entries) {
+    await sql`
+      INSERT INTO flower_catalog (canonical_name, category, base_type)
+      VALUES (${name}, ${info.category}, ${info.baseType})
+      ON CONFLICT (canonical_name) DO UPDATE SET base_type = EXCLUDED.base_type
+    `;
     created++;
   }
 
-  return { created, skipped };
+  return { created, skipped: ingredients.length - created };
 }
 
 export async function autoMatchRecipeIngredients(): Promise<{ matched: number; unmatched: number }> {
   const sql = getDb();
-  const ingredients = await sql`SELECT id, ingredient_name, is_foliage FROM recipe_ingredients WHERE flower_id IS NULL` as Row[];
 
-  let matched = 0;
-  let unmatched = 0;
+  const catalog = await sql`SELECT id, canonical_name FROM flower_catalog` as Row[];
+  const catalogMap = new Map(catalog.map(c => [String(c.canonical_name), Number(c.id)]));
+
+  const ingredients = await sql`SELECT id, ingredient_name FROM recipe_ingredients WHERE flower_id IS NULL` as Row[];
+
+  let matched = 0, unmatched = 0;
+  const byFlower = new Map<number, number[]>();
 
   for (const ing of ingredients) {
-    const { productType } = normalizeName(String(ing.ingredient_name));
-    if (!productType) { unmatched++; continue; }
+    const cl = classifyProductType(String(ing.ingredient_name));
+    if (!cl || !catalogMap.has(cl.canonicalName)) { unmatched++; continue; }
+    const flowerId = catalogMap.get(cl.canonicalName)!;
+    if (!byFlower.has(flowerId)) byFlower.set(flowerId, []);
+    byFlower.get(flowerId)!.push(Number(ing.id));
+  }
 
-    const [entry] = await sql`SELECT id FROM flower_catalog WHERE canonical_name = ${productType}`;
-    if (entry) {
-      await sql`UPDATE recipe_ingredients SET flower_id = ${entry.id}, match_status = 'auto_matched', match_confidence = 0.9 WHERE id = ${ing.id}`;
+  for (const [flowerId, ids] of byFlower) {
+    // Update one at a time to stay compatible with Neon tagged template
+    for (const ingId of ids) {
+      await sql`UPDATE recipe_ingredients SET flower_id = ${flowerId}, match_status = 'auto_matched', match_confidence = 0.9 WHERE id = ${ingId}`;
       matched++;
-    } else {
-      unmatched++;
     }
   }
 
@@ -53,32 +66,41 @@ export async function autoMatchRecipeIngredients(): Promise<{ matched: number; u
 
 export async function autoMatchLineItems(): Promise<{ matched: number; unmatched: number; aliases_created: number }> {
   const sql = getDb();
+
+  const catalog = await sql`SELECT id, canonical_name FROM flower_catalog` as Row[];
+  const catalogMap = new Map(catalog.map(c => [String(c.canonical_name), Number(c.id)]));
+
   const lineItems = await sql`
-    SELECT li.id, li.description, li.unit_price, li.cost_per_stem, li.quantity, li.price_basis, li.receipt_id, r.vendor_id, r.invoice_date
+    SELECT li.id, li.description, li.unit_price, li.cost_per_stem, r.vendor_id, r.invoice_date
     FROM line_items li
     JOIN receipts r ON li.receipt_id = r.id
     WHERE li.is_flower = 1
   ` as Row[];
 
-  let matched = 0;
-  let unmatched = 0;
-  let aliases_created = 0;
+  let matched = 0, unmatched = 0, aliases_created = 0;
 
   for (const item of lineItems) {
-    const { productType } = normalizeName(String(item.description));
-    if (!productType) { unmatched++; continue; }
+    const cl = classifyProductType(String(item.description));
+    if (!cl || !catalogMap.has(cl.canonicalName)) { unmatched++; continue; }
 
-    const [entry] = await sql`SELECT id FROM flower_catalog WHERE canonical_name = ${productType}`;
-    if (!entry) { unmatched++; continue; }
+    const flowerId = catalogMap.get(cl.canonicalName)!;
+    const stemSizeMatch = String(item.description).match(/\b(\d{2,3})\s*(?:cm|CM)\b/);
+    const stemSizeCm = stemSizeMatch ? parseInt(stemSizeMatch[1], 10) : null;
 
-    await sql`INSERT INTO flower_aliases (flower_id, alias, vendor_id, confidence) VALUES (${entry.id}, ${item.description}, ${item.vendor_id}, 0.9) ON CONFLICT (alias, vendor_id) DO NOTHING`;
+    await sql`
+      INSERT INTO flower_aliases (flower_id, alias, vendor_id, confidence)
+      VALUES (${flowerId}, ${String(item.description)}, ${item.vendor_id}, 0.9)
+      ON CONFLICT (alias, vendor_id) DO NOTHING
+    `;
     aliases_created++;
 
-    const costValue = item.cost_per_stem ?? item.unit_price;
+    const costValue = (item.cost_per_stem ?? item.unit_price) as number | null;
     if (costValue != null && Number(costValue) > 0) {
-      await sql`INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date) VALUES (${entry.id}, ${item.vendor_id}, ${costValue}, 'stem', ${item.id}, ${item.invoice_date})`;
+      await sql`
+        INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date, stem_size_cm)
+        VALUES (${flowerId}, ${item.vendor_id}, ${Number(costValue)}, 'stem', ${item.id}, ${item.invoice_date}, ${stemSizeCm})
+      `;
     }
-
     matched++;
   }
 

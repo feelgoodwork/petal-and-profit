@@ -38,10 +38,10 @@ export async function generateMatchSuggestions(): Promise<MatchSuggestion[]> {
   const suggestions: MatchSuggestion[] = [];
 
   for (const item of lineItems) {
-    const { productType, variety, color } = normalizeName(item.description);
+    const { canonicalName, variety, color } = normalizeName(item.description);
 
-    if (productType) {
-      const exactMatch = catalog.find(c => c.canonical_name === productType);
+    if (canonicalName) {
+      const exactMatch = catalog.find(c => c.canonical_name === canonicalName);
       if (exactMatch) {
         suggestions.push({
           line_item_id: item.id,
@@ -49,7 +49,7 @@ export async function generateMatchSuggestions(): Promise<MatchSuggestion[]> {
           flower_id: exactMatch.id,
           canonical_name: exactMatch.canonical_name,
           confidence: 1.0,
-          product_type: productType,
+          product_type: canonicalName,
           variety,
           color,
         });
@@ -57,7 +57,7 @@ export async function generateMatchSuggestions(): Promise<MatchSuggestion[]> {
       }
     }
 
-    const searchTerm = productType || item.description;
+    const searchTerm = canonicalName || item.description;
     const results = fuse.search(searchTerm);
     if (results.length > 0 && results[0].score !== undefined) {
       suggestions.push({
@@ -66,7 +66,7 @@ export async function generateMatchSuggestions(): Promise<MatchSuggestion[]> {
         flower_id: results[0].item.id,
         canonical_name: results[0].item.canonical_name,
         confidence: 1 - results[0].score,
-        product_type: productType,
+        product_type: canonicalName,
         variety,
         color,
       });
