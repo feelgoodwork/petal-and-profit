@@ -35,6 +35,7 @@ export default function RootLayout({
           <a href="/catalog" className="text-sm text-stone-500 hover:text-stone-900">Catalog</a>
           <a href="/matching" className="text-sm text-stone-500 hover:text-stone-900">Matching</a>
           <a href="/profitability" className="text-sm text-stone-500 hover:text-stone-900">Profitability</a>
+          <a href="/help" className="text-sm text-stone-400 hover:text-stone-900 ml-auto">Help</a>
         </nav>
         <main className="bg-stone-50 min-h-screen">
           {children}
