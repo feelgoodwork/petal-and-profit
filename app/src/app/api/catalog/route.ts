@@ -10,7 +10,11 @@ export async function GET() {
         (SELECT AVG(unit_cost) FROM ingredient_costs WHERE flower_id = fc.id) as avg_cost,
         (SELECT MIN(unit_cost) FROM ingredient_costs WHERE flower_id = fc.id) as min_cost,
         (SELECT MAX(unit_cost) FROM ingredient_costs WHERE flower_id = fc.id) as max_cost,
-        (SELECT COUNT(*) FROM ingredient_costs WHERE flower_id = fc.id) as cost_count
+        (SELECT COUNT(*) FROM ingredient_costs WHERE flower_id = fc.id) as cost_count,
+        CASE
+          WHEN fc.category = 'foliage' THEN 'bunch'
+          ELSE 'stem'
+        END as price_unit
       FROM flower_catalog fc
       ORDER BY fc.category, fc.canonical_name
     `;

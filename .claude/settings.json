@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Write(*)",
+      "Read(*)",
+      "WebSearch",
+      "WebFetch(domain:www.ams.usda.gov)",
+      "WebFetch(domain:mymarketnews.ams.usda.gov)",
+      "WebFetch(domain:github.com)",
+      "Bash(git reset:*)",
+      "Bash(git rm:*)",
+      "Bash(rm -rf /Users/lorimercer/github/petal-and-profit/app/.git)",
+      "WebFetch(domain:www.fiftyflowers.com)",
+      "WebFetch(domain:fiftyflowers.com)"
+    ],
+    "deny": []
+  }
+}

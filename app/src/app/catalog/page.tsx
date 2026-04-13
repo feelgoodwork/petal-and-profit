@@ -12,6 +12,7 @@ interface CatalogEntry {
   id: number;
   canonical_name: string;
   category: string | null;
+  price_unit: string;
   alias_count: number;
   avg_cost: number | null;
   min_cost: number | null;
@@ -109,6 +110,9 @@ export default function CatalogPage() {
 
 function CatalogTable({ title, entries }: { title: string; entries: CatalogEntry[] }) {
   if (entries.length === 0) return null;
+  // All entries in a table share the same category, so use the first entry's unit
+  const unit = entries[0]?.price_unit ?? 'stem';
+  const unitLabel = `/${unit}`;
 
   return (
     <div className="mb-8">
@@ -119,7 +123,7 @@ function CatalogTable({ title, entries }: { title: string; entries: CatalogEntry
             <TableRow>
               <TableHead>Product Type</TableHead>
               <TableHead className="text-right">Aliases</TableHead>
-              <TableHead className="text-right">Avg Cost/Stem</TableHead>
+              <TableHead className="text-right">Avg Cost{unitLabel}</TableHead>
               <TableHead className="text-right">Range</TableHead>
               <TableHead className="text-right">Price Points</TableHead>
             </TableRow>
@@ -140,11 +144,13 @@ function CatalogTable({ title, entries }: { title: string; entries: CatalogEntry
                   )}
                 </TableCell>
                 <TableCell className="text-right font-mono text-sm">
-                  {entry.avg_cost != null ? `$${entry.avg_cost.toFixed(2)}` : '-'}
+                  {entry.avg_cost != null
+                    ? <span>${entry.avg_cost.toFixed(2)}<span className="text-stone-400 text-xs font-sans">{unitLabel}</span></span>
+                    : '-'}
                 </TableCell>
                 <TableCell className="text-right font-mono text-sm text-stone-500">
                   {entry.min_cost != null && entry.max_cost != null
-                    ? `$${entry.min_cost.toFixed(2)} - $${entry.max_cost.toFixed(2)}`
+                    ? `$${entry.min_cost.toFixed(2)} – $${entry.max_cost.toFixed(2)}`
                     : '-'}
                 </TableCell>
                 <TableCell className="text-right text-sm text-stone-500">
