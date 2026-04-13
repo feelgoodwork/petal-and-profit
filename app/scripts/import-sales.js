@@ -1,13 +1,13 @@
 /**
- * Import sales data from xlsx files into Neon.
+ * Import sales data from xlsx files into Neon (batched for speed).
  * Usage: node scripts/import-sales.js
  */
 const XLSX = require('xlsx');
-const { neon } = require('@neondatabase/serverless');
+const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
+const Fuse = require('fuse.js');
 
-// Load .env.local
 const envPath = path.join(__dirname, '..', '.env.local');
 if (fs.existsSync(envPath)) {
   for (const line of fs.readFileSync(envPath, 'utf-8').split('\n')) {
@@ -16,22 +16,20 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-const sql = neon(process.env.DATABASE_URL);
 const gdrivePath = process.env.GDRIVE_DATA_PATH;
 
 async function main() {
-  // Get recipes for matching
-  const recipes = await sql`SELECT id, name FROM recipes`;
-  console.log('Recipes loaded:', recipes.length);
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
 
-  // Create table if needed
-  await sql`CREATE TABLE IF NOT EXISTS sales (
+  // Ensure table exists with correct types
+  await client.query(`CREATE TABLE IF NOT EXISTS sales (
     id SERIAL PRIMARY KEY,
     order_date TEXT,
     order_number TEXT,
     item_code TEXT,
     description TEXT,
-    quantity INTEGER DEFAULT 1,
+    quantity REAL DEFAULT 1,
     amount REAL,
     total_amount REAL,
     occasion TEXT,
@@ -39,20 +37,23 @@ async function main() {
     recipe_id INTEGER,
     source_file TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
-  )`;
+  )`);
+
+  // Get recipes for matching
+  const { rows: recipes } = await client.query('SELECT id, name FROM recipes');
+  console.log('Recipes loaded:', recipes.length);
+
+  const fuse = new Fuse(recipes, { keys: ['name'], threshold: 0.3, includeScore: true });
 
   const files = fs.readdirSync(gdrivePath)
     .filter(f => f.startsWith('Copy of Sales') && f.endsWith('.xlsx'))
     .sort();
 
-  console.log('Sales files:', files.length);
-
   let totalImported = 0;
 
   for (const file of files) {
-    // Check if already imported
-    const [existing] = await sql`SELECT COUNT(*) as count FROM sales WHERE source_file = ${file}`;
-    if (Number(existing.count) > 0) {
+    const { rows: existing } = await client.query('SELECT COUNT(*) as count FROM sales WHERE source_file = $1', [file]);
+    if (Number(existing[0].count) > 0) {
       console.log(`  ${file}: already imported, skipping`);
       continue;
     }
@@ -78,7 +79,8 @@ async function main() {
       if (kDesc) itemCols.push({ code: kCode, qty: kQty, desc: kDesc, amt: kAmt });
     }
 
-    let fileCount = 0;
+    // Build all rows first
+    const allRows = [];
     for (const row of data) {
       let orderDate = row[kDate];
       if (typeof orderDate === 'number') {
@@ -99,37 +101,66 @@ async function main() {
         const qty = col.qty && row[col.qty] ? Number(row[col.qty]) : 1;
         const amount = col.amt && row[col.amt] ? Number(row[col.amt]) : null;
         const itemCode = col.code && row[col.code] ? String(row[col.code]).trim() : null;
+        const recipeId = matchSale(descStr, recipes, fuse);
 
-        const recipeId = matchSaleToRecipe(descStr, recipes);
-
-        await sql`
-          INSERT INTO sales (order_date, order_number, item_code, description, quantity, amount, total_amount, occasion, order_type, recipe_id, source_file)
-          VALUES (${orderDate}, ${orderNumber}, ${itemCode}, ${descStr}, ${qty}, ${amount}, ${totalAmount}, ${occasion}, ${orderType}, ${recipeId}, ${file})
-        `;
-        fileCount++;
+        allRows.push([orderDate, orderNumber, itemCode, descStr, qty, amount, totalAmount, occasion, orderType, recipeId, file]);
       }
-      if (fileCount % 500 === 0) process.stdout.write(`  ${file}: ${fileCount}\r`);
     }
 
-    console.log(`  ${file}: ${fileCount} line items imported`);
-    totalImported += fileCount;
-  }
+    // Batch insert (100 rows at a time)
+    const batchSize = 100;
+    let inserted = 0;
+    for (let i = 0; i < allRows.length; i += batchSize) {
+      const batch = allRows.slice(i, i + batchSize);
+      const values = [];
+      const placeholders = [];
 
-  console.log(`\nTotal imported: ${totalImported}`);
+      for (let j = 0; j < batch.length; j++) {
+        const offset = j * 11;
+        placeholders.push(`($${offset+1},$${offset+2},$${offset+3},$${offset+4},$${offset+5},$${offset+6},$${offset+7},$${offset+8},$${offset+9},$${offset+10},$${offset+11})`);
+        values.push(...batch[j]);
+      }
+
+      await client.query(
+        `INSERT INTO sales (order_date, order_number, item_code, description, quantity, amount, total_amount, occasion, order_type, recipe_id, source_file) VALUES ${placeholders.join(',')}`,
+        values
+      );
+      inserted += batch.length;
+      if (inserted % 1000 === 0) process.stdout.write(`  ${file}: ${inserted}/${allRows.length}\r`);
+    }
+
+    console.log(`  ${file}: ${allRows.length} line items imported`);
+    totalImported += allRows.length;
+  }
 
   // Verify
-  const [stats] = await sql`SELECT COUNT(*) as c, COUNT(DISTINCT order_number) as orders, COUNT(DISTINCT recipe_id) as matched FROM sales`;
-  console.log(`DB: ${stats.c} sales, ${stats.orders} orders, ${stats.matched} matched recipes`);
+  const { rows: stats } = await client.query(`
+    SELECT COUNT(*)::int as total, COUNT(recipe_id)::int as matched,
+    COUNT(DISTINCT order_number)::int as orders FROM sales
+  `);
+  console.log(`\nTotal: ${stats[0].total} sales, ${stats[0].orders} orders, ${stats[0].matched} matched to recipes`);
+
+  await client.end();
 }
 
-function matchSaleToRecipe(description, recipes) {
-  const lower = description.toLowerCase().replace(/[-–]/g, ' ').replace(/\s+/g, ' ').trim();
+function matchSale(description, recipes, fuse) {
+  const cleaned = description.toLowerCase()
+    .replace(/[-–]/g, ' ')
+    .replace(/\s*(standard|deluxe|premium|bouquet|arrangement|floral|vase|basket)\s*/gi, ' ')
+    .replace(/\s*(door dash|dd)\s*/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Substring match
   for (const r of recipes) {
-    const recipeLower = r.name.toLowerCase().replace(/[-–]/g, ' ').replace(/\s+/g, ' ').trim();
-    if (lower.includes(recipeLower) || recipeLower.includes(lower)) return r.id;
-    const stripped = lower.replace(/\s*(standard|deluxe|premium|bouquet|arrangement)\s*$/i, '').trim();
-    if (stripped === recipeLower || recipeLower.includes(stripped) || stripped.includes(recipeLower)) return r.id;
+    const rLower = r.name.toLowerCase();
+    if (cleaned.includes(rLower) || rLower.includes(cleaned)) return r.id;
   }
+
+  // Fuzzy match
+  const results = fuse.search(cleaned);
+  if (results.length > 0 && results[0].score < 0.25) return results[0].item.id;
+
   return null;
 }
 
