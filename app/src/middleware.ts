@@ -11,8 +11,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow the login API
-  if (pathname === '/api/login') {
+  // Allow the login API and internal sync endpoints
+  if (pathname === '/api/login' || pathname === '/api/usda/sync') {
     return NextResponse.next();
   }
 
