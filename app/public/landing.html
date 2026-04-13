@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Petal & Profit — Know What Every Arrangement Actually Makes You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Jost:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ── */
+:root {
+  --linen:     #faf7f2;
+  --linen-dk:  #f2ece1;
+  --linen-md:  #e8e0d0;
+  --cream:     #fefcf8;
+  --sage:      #4d7052;
+  --sage-lt:   #edf3ed;
+  --sage-md:   #9abf9e;
+  --ink:       #1e1c18;
+  --slate:     #6a6559;
+  --slate-lt:  #aea99c;
+  --border:    #ddd6c2;
+  --white:     #ffffff;
+  --gold:      #b08840;
+  --gold-lt:   #fdf4e3;
+}
+
+/* ── RESET ── */
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Jost', sans-serif;
+  background: var(--linen);
+  color: var(--ink);
+  font-weight: 300;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ── TYPOGRAPHY ── */
+h1,h2,h3 { font-family: 'Cormorant Garamond', serif; font-weight: 400; line-height: 1.12; }
+p { color: var(--slate); }
+
+/* ── NAV — pure light ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(250,247,242,0.97);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 60px; height: 64px;
+}
+.nav-brand { display: flex; align-items: center; gap: 11px; }
+.nav-mark {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid var(--sage);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 12px; color: var(--sage); font-weight: 500;
+}
+.nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; color: var(--ink); letter-spacing: 0.02em; }
+.nav-logo em { color: var(--sage); font-style: normal; }
+.nav-links { display: flex; gap: 32px; }
+.nav-links a { font-size: 13px; font-weight: 400; color: var(--slate); text-decoration: none; letter-spacing: 0.04em; transition: color .2s; }
+.nav-links a:hover { color: var(--ink); }
+.nav-btn {
+  background: var(--sage); color: #fff; border: none;
+  padding: 9px 22px; border-radius: 4px;
+  font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 500;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  cursor: pointer; transition: background .2s; text-decoration: none;
+  display: inline-block;
+}
+.nav-btn:hover { background: #3a5640; }
+
+/* ── LAYOUT UTILITIES ── */
+.section { padding: 88px 60px; }
+.section-sm { padding: 64px 60px; }
+.wrap { max-width: 1100px; margin: 0 auto; }
+.wrap-sm { max-width: 740px; margin: 0 auto; }
+.bg-cream { background: var(--cream); }
+.bg-linen-dk { background: var(--linen-dk); }
+.bg-sage-lt { background: var(--sage-lt); }
+.divider { border: none; border-top: 1px solid var(--border); margin: 0 60px; }
+
+/* ── LABEL ── */
+.label {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+}
+.label-line { width: 24px; height: 1px; background: var(--sage); }
+.label-text { font-size: 11px; font-weight: 500; color: var(--sage); letter-spacing: 0.12em; text-transform: uppercase; }
+
+/* ── HEADINGS ── */
+.h1 { font-size: clamp(40px, 4.5vw, 62px); color: var(--ink); margin-bottom: 22px; letter-spacing: -0.01em; }
+.h1 em { font-style: italic; color: var(--sage); }
+.h2 { font-size: clamp(28px, 3vw, 42px); color: var(--ink); margin-bottom: 14px; }
+.h2 em { font-style: italic; color: var(--sage); }
+.h2-center { text-align: center; }
+.h3 { font-size: 20px; color: var(--ink); margin-bottom: 8px; font-weight: 500; }
+.lead { font-size: 17px; font-weight: 300; color: var(--slate); line-height: 1.78; margin-bottom: 36px; max-width: 480px; }
+.body { font-size: 14px; font-weight: 300; color: var(--slate); line-height: 1.8; }
+.body-center { text-align: center; max-width: 560px; margin: 0 auto 48px; }
+
+/* ── BUTTONS ── */
+.btn-sage {
+  background: var(--sage); color: #fff; border: none;
+  padding: 14px 32px; border-radius: 4px;
+  font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 500;
+  letter-spacing: 0.04em; cursor: pointer; transition: all .2s;
+  text-decoration: none; display: inline-block;
+}
+.btn-sage:hover { background: #3a5640; transform: translateY(-1px); }
+.btn-outline {
+  background: transparent; color: var(--ink);
+  border: 1px solid var(--border); padding: 14px 26px; border-radius: 4px;
+  font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 400;
+  cursor: pointer; transition: all .2s;
+  text-decoration: none; display: inline-block;
+}
+.btn-outline:hover { border-color: var(--slate); }
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.btn-note { font-size: 12px; color: var(--slate-lt); margin-top: 12px; }
+
+/* ══════════════════════════════
+   §1 HERO — all light
+══════════════════════════════ */
+.hero { display: grid; grid-template-columns: 1fr 1fr; min-height: 88vh; }
+
+.hero-left {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 80px 56px 80px 60px; position: relative;
+}
+.hero-left::after {
+  content: ''; position: absolute; top: 15%; right: 0; width: 1px; height: 70%;
+  background: linear-gradient(to bottom, transparent, var(--border) 20%, var(--border) 80%, transparent);
+}
+.hero-kicker {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--sage); margin-bottom: 24px;
+}
+.hero-kicker::before { content: ''; display: block; width: 24px; height: 1px; background: var(--sage); }
+
+/* Hero right — linen-dk (light, not dark) */
+.hero-right {
+  background: var(--linen-dk);
+  display: flex; align-items: center; justify-content: center;
+  padding: 56px 48px;
+  border-left: 1px solid var(--border);
+}
+
+/* App preview card — on light bg, use shadow + border */
+.preview-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 100%; max-width: 390px;
+  box-shadow: 0 24px 64px rgba(30,28,24,0.1), 0 4px 16px rgba(30,28,24,0.06);
+}
+.pc-bar {
+  background: var(--linen-dk);
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  border-radius: 9px 9px 0 0;
+}
+.pc-bar-name { font-size: 11px; color: var(--slate-lt); letter-spacing: 0.05em; }
+.pc-live { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--sage); font-weight: 500; letter-spacing: 0.05em; }
+.pc-live::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--sage); animation: pulse 2s ease infinite; }
+@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.35 } }
+.pc-body { padding: 16px; }
+.pc-section-label {
+  font-size: 10px; font-weight: 500; color: var(--slate-lt);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  margin-bottom: 11px;
+}
+.pc-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid var(--linen-dk);
+}
+.pc-row:last-of-type { border-bottom: none; }
+.pc-name { font-size: 12px; color: var(--ink); font-weight: 400; }
+.pc-msrp { font-size: 10px; color: var(--slate-lt); margin-top: 1px; }
+.badge {
+  font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 3px;
+  font-family: 'DM Mono', monospace; letter-spacing: 0.03em;
+}
+.b-g { background: var(--sage-lt); color: #2d5030; }
+.b-a { background: var(--gold-lt); color: #7a4e10; }
+.b-r { background: #fdecea; color: #8a2018; }
+.pc-sep { height: 1px; background: var(--border); margin: 11px 0; }
+.pc-stat { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.pc-stat-l { font-size: 10px; color: var(--slate-lt); }
+.pc-stat-v { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--sage); font-weight: 500; }
+.pc-alert {
+  background: var(--gold-lt); border: 1px solid #e8d098; border-radius: 5px;
+  padding: 9px 11px; margin-top: 10px;
+}
+.pc-alert-label { font-size: 9px; color: var(--gold); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 5px; }
+.pc-alert-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+.pc-alert-stem { font-size: 10px; color: #7a5820; }
+.pc-alert-action { font-size: 10px; color: var(--gold); font-family: 'DM Mono', monospace; font-weight: 500; }
+
+/* ══════════════════════════════
+   PROOF STRIP — sage-lt (light)
+══════════════════════════════ */
+.proof {
+  background: var(--sage-lt);
+  border-top: 1px solid var(--sage-md);
+  border-bottom: 1px solid var(--sage-md);
+  display: grid; grid-template-columns: repeat(4,1fr);
+  padding: 24px 60px;
+}
+.proof-item { text-align: center; padding: 4px 16px; border-right: 1px solid var(--sage-md); }
+.proof-item:last-child { border-right: none; }
+.proof-n { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 400; color: var(--sage); margin-bottom: 2px; }
+.proof-l { font-size: 11px; color: var(--slate); letter-spacing: 0.05em; }
+
+/* ══════════════════════════════
+   §2 PROBLEM & AGITATION
+══════════════════════════════ */
+.pain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+.pain-list { display: flex; flex-direction: column; gap: 16px; margin-top: 28px; }
+.pain-item {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 6px; padding: 16px 18px;
+}
+.pain-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.pain-title { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 3px; }
+.pain-body { font-size: 13px; color: var(--slate); line-height: 1.6; }
+.bridge-hook {
+  margin-top: 32px; padding: 20px 22px;
+  background: var(--sage-lt); border-left: 3px solid var(--sage);
+  border-radius: 0 6px 6px 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; font-style: italic; font-weight: 400;
+  color: var(--ink); line-height: 1.5;
+}
+
+/* ══════════════════════════════
+   §3 SOLUTION BRIDGE
+══════════════════════════════ */
+.before-after {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--border); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden; margin-top: 40px;
+}
+.ba-col { padding: 32px; }
+.ba-col.before { background: var(--linen-dk); }
+.ba-col.after { background: var(--sage-lt); }
+.ba-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; }
+.ba-col.before .ba-label { color: var(--slate-lt); }
+.ba-col.after .ba-label { color: var(--sage); }
+.ba-list { display: flex; flex-direction: column; gap: 10px; }
+.ba-item { font-size: 13px; display: flex; gap: 8px; line-height: 1.5; }
+.ba-col.before .ba-item { color: var(--slate); }
+.ba-col.before .ba-item::before { content: '✗'; color: var(--slate-lt); flex-shrink: 0; font-size: 12px; }
+.ba-col.after .ba-item { color: var(--ink); }
+.ba-col.after .ba-item::before { content: '✓'; color: var(--sage); flex-shrink: 0; font-size: 12px; font-weight: 600; }
+.bridge-intro {
+  text-align: center; margin-top: 40px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 400; color: var(--ink); line-height: 1.4;
+}
+.bridge-intro em { font-style: italic; color: var(--sage); }
+.bridge-cta { display: flex; justify-content: center; margin-top: 24px; gap: 12px; flex-wrap: wrap; }
+
+/* ══════════════════════════════
+   §4 FEATURES & BENEFITS
+══════════════════════════════ */
+.features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 48px; }
+.feature-card {
+  background: var(--white); border: 1px solid var(--border); border-radius: 6px; padding: 28px;
+  transition: border-color .2s, transform .2s;
+}
+.feature-card:hover { border-color: var(--sage-md); transform: translateY(-2px); }
+.feature-tag { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sage); margin-bottom: 9px; }
+.feature-card h3 { margin-bottom: 8px; font-size: 18px; }
+.phase-card {
+  background: var(--linen-dk); border: 1.5px dashed var(--linen-md); border-radius: 6px; padding: 28px;
+}
+.phase-badge {
+  display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--gold); background: var(--gold-lt);
+  padding: 3px 9px; border-radius: 3px; margin-bottom: 10px;
+}
+
+/* ══════════════════════════════
+   §5 SOCIAL PROOF
+══════════════════════════════ */
+.testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-top: 48px; }
+.testi {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 6px; padding: 26px;
+}
+.testi-quote {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 15px; line-height: 1.65; color: var(--ink); margin-bottom: 16px;
+}
+.testi-quote::before {
+  content: '\201C'; color: var(--sage); font-size: 22px;
+  line-height: 0; vertical-align: -5px; margin-right: 2px;
+}
+.testi-attr { font-size: 11px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--slate-lt); }
+.stats-strip {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 1px; background: var(--border); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden; margin-top: 48px;
+}
+.stat-block { background: var(--white); padding: 28px; text-align: center; }
+.stat-n { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 400; color: var(--ink); margin-bottom: 4px; }
+.stat-l { font-size: 13px; color: var(--slate); font-weight: 300; }
+
+/* ══════════════════════════════
+   §6 HOW IT WORKS
+══════════════════════════════ */
+.steps-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 48px; }
+.step { background: var(--white); padding: 36px 30px; }
+.step-n { font-family: 'Cormorant Garamond', serif; font-size: 54px; font-weight: 300; color: var(--linen-md); line-height: 1; margin-bottom: 16px; }
+.step h3 { margin-bottom: 8px; }
+.step .body strong { color: var(--sage); font-weight: 400; }
+
+/* ══════════════════════════════
+   §7 PRICING
+══════════════════════════════ */
+.pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 48px; max-width: 860px; margin-left: auto; margin-right: auto; }
+.pricing-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 36px; }
+.pricing-card.featured { border: 2px solid var(--sage); background: var(--sage-lt); }
+.pc-tier { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; color: var(--slate); }
+.pricing-card.featured .pc-tier { color: var(--sage); }
+.pc-name { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 500; color: var(--ink); margin-bottom: 18px; }
+.pc-price { display: flex; align-items: baseline; gap: 5px; margin-bottom: 5px; }
+.pc-amt { font-family: 'Cormorant Garamond', serif; font-size: 44px; font-weight: 400; color: var(--ink); }
+.pc-per { font-size: 14px; color: var(--slate); font-weight: 300; }
+.pc-setup { font-size: 12px; color: var(--slate-lt); padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+.pricing-card.featured .pc-setup { border-color: var(--sage-md); }
+.pc-feats { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+.pc-feat { display: flex; gap: 9px; font-size: 13px; font-weight: 300; color: var(--slate); }
+.pc-feat .ck { color: var(--sage); font-weight: 500; flex-shrink: 0; }
+.pc-feat .ck-n { color: var(--slate-lt); flex-shrink: 0; }
+.pc-cta {
+  width: 100%; padding: 12px; border-radius: 4px;
+  font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 500;
+  letter-spacing: 0.07em; text-transform: uppercase; cursor: pointer;
+  text-decoration: none; display: block; text-align: center;
+  transition: all .2s;
+}
+.pc-cta.free { border: 1px solid var(--border); background: transparent; color: var(--ink); }
+.pc-cta.free:hover { background: var(--linen-dk); }
+.pc-cta.paid { border: 1px solid var(--sage); background: var(--sage); color: #fff; }
+.pc-cta.paid:hover { background: #3a5640; }
+.anchor-box {
+  background: var(--gold-lt); border: 1px solid #e8d098; border-radius: 6px;
+  padding: 16px 20px; margin-bottom: 32px;
+  font-size: 14px; color: #5a3c10; line-height: 1.6; text-align: center;
+}
+.anchor-box strong { color: var(--ink); }
+.guarantee { text-align: center; margin-top: 20px; font-size: 13px; color: var(--slate); }
+.guarantee strong { color: var(--ink); }
+
+/* ══════════════════════════════
+   §8 FAQ
+══════════════════════════════ */
+.faq-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 48px; }
+.faq-item { border-bottom: 1px solid var(--border); background: var(--white); }
+.faq-item:last-child { border-bottom: none; }
+.faq-q {
+  width: 100%; padding: 20px 24px; text-align: left;
+  background: none; border: none; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 400;
+  color: var(--ink); transition: background .15s;
+}
+.faq-q:hover { background: var(--linen); }
+.faq-q.open { background: var(--sage-lt); color: var(--sage); }
+.faq-icon { font-size: 18px; font-weight: 300; color: var(--slate-lt); flex-shrink: 0; margin-left: 16px; transition: transform .2s; }
+.faq-q.open .faq-icon { transform: rotate(45deg); color: var(--sage); }
+.faq-a { display: none; padding: 0 24px 20px; font-size: 13px; font-weight: 300; color: var(--slate); line-height: 1.75; background: var(--sage-lt); }
+.faq-a.open { display: block; }
+
+/* ══════════════════════════════
+   §9 FINAL CTA — sage-lt (light)
+══════════════════════════════ */
+.final-cta {
+  background: var(--sage-lt);
+  border-top: 1px solid var(--sage-md);
+  padding: 88px 60px;
+  text-align: center;
+}
+.final-cta .h2 { margin-bottom: 16px; }
+.final-cta .body { max-width: 480px; margin: 0 auto 36px; font-size: 15px; }
+.final-note { font-size: 12px; color: var(--slate-lt); margin-top: 16px; }
+
+/* ══════════════════════════════
+   FOOTER — lightest version
+══════════════════════════════ */
+footer {
+  background: var(--linen-dk);
+  border-top: 1px solid var(--border);
+  padding: 28px 60px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 400; color: var(--ink); }
+.footer-brand em { color: var(--sage); font-style: normal; }
+.footer-right { font-size: 11px; color: var(--slate-lt); letter-spacing: 0.04em; }
+
+/* ══════════════════════════════
+   PASSWORD GATE
+══════════════════════════════ */
+#pw-gate {
+  position: fixed; inset: 0; z-index: 99999;
+  background: rgba(250,247,242,0.98);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+}
+.pw-box {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 10px; padding: 44px 36px; width: 300px; text-align: center;
+  box-shadow: 0 16px 48px rgba(30,28,24,0.1);
+}
+.pw-name { font-family: 'Cormorant Garamond', serif; color: var(--ink); font-size: 22px; font-weight: 400; margin-bottom: 4px; }
+.pw-name em { color: var(--sage); font-style: normal; }
+.pw-sub { font-size: 12px; color: var(--slate-lt); margin-bottom: 26px; letter-spacing: 0.04em; }
+.pw-in {
+  width: 100%; padding: 11px; background: var(--linen);
+  border: 1px solid var(--border); border-radius: 4px;
+  color: var(--ink); font-size: 13px; font-family: 'DM Mono', monospace;
+  text-align: center; letter-spacing: 0.1em; outline: none; margin-bottom: 10px;
+  transition: border-color .2s;
+}
+.pw-in:focus { border-color: var(--sage); }
+.pw-in.shake { animation: shk .35s ease; border-color: #c05040; }
+@keyframes shk { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+.pw-btn {
+  width: 100%; padding: 11px; background: var(--sage); border: none; border-radius: 4px;
+  color: #fff; font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+  text-transform: uppercase; cursor: pointer; font-family: 'Jost', sans-serif;
+  transition: background .2s;
+}
+.pw-btn:hover { background: #3a5640; }
+.pw-err { font-size: 11px; color: #b03020; margin-top: 8px; min-height: 16px; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
+.hero-kicker { animation: fadeUp .5s ease both; }
+.h1 { animation: fadeUp .5s .06s ease both; }
+.lead { animation: fadeUp .5s .12s ease both; }
+.btn-row { animation: fadeUp .5s .18s ease both; }
+.preview-card { animation: fadeUp .6s .1s ease both; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .hero, .pain-grid, .before-after, .features-grid, .pricing-grid, .testi-grid, .steps-grid, .stats-strip { grid-template-columns: 1fr; }
+  .proof { grid-template-columns: 1fr 1fr; }
+  nav { padding: 0 24px; } .nav-links { display: none; }
+  .section, .section-sm, .final-cta, footer { padding: 52px 24px; }
+  .hero-left { padding: 52px 24px; }
+  .proof { padding: 24px; }
+  .divider { margin: 0 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-mark">P&amp;P</div>
+    <div class="nav-logo">Petal <em>&amp;</em> Profit</div>
+  </div>
+  <div class="nav-links">
+    <a href="#problem">The problem</a>
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/demo.html" target="_blank">Free demo</a>
+  </div>
+  <a href="#pricing" class="nav-btn">Get started</a>
+</nav>
+
+
+<!-- ══════════════════════════════
+     §1 HERO
+══════════════════════════════ -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-kicker">For independent flower shops</div>
+    <h1 class="h1">Pretty <em>and</em> profitable.</h1>
+    <p class="body" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:18px;color:var(--slate-lt);margin-bottom:22px;">Your shortcut to real margins — in real time.</p>
+    <p class="lead">You got into flowers because you love them. Petal &amp; Profit makes sure your shop loves you back — connecting your invoices to your recipes automatically so you always know what's making money and what isn't.</p>
+    <div class="btn-row">
+      <a href="/demo.html" target="_blank" class="btn-sage">See it with real shop data →</a>
+      <a href="#problem" class="btn-outline">See how it works</a>
+    </div>
+    <div class="btn-note">Free demo · real UpTowne Florist data · no signup required</div>
+  </div>
+
+  <div class="hero-right">
+    <div class="preview-card">
+      <div class="pc-bar">
+        <div class="pc-bar-name">Milano's UpTowne · Admin Pro Day</div>
+        <div class="pc-live">costs live</div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-section-label">Recipe Margin Summary</div>
+        <div class="pc-row"><div><div class="pc-name">As Good As Gold</div><div class="pc-msrp">$55 msrp</div></div><span class="badge b-g">4.3×</span></div>
+        <div class="pc-row"><div><div class="pc-name">Thanks For All You Do!</div><div class="pc-msrp">$45 msrp</div></div><span class="badge b-g">5.2×</span></div>
+        <div class="pc-row"><div><div class="pc-name">Make 'Em Smile</div><div class="pc-msrp">$40 msrp</div></div><span class="badge b-a">3.1×</span></div>
+        <div class="pc-row"><div><div class="pc-name">Cheerful Yellow</div><div class="pc-msrp">$60 msrp</div></div><span class="badge b-r">1.3×</span></div>
+        <div class="pc-row"><div><div class="pc-name">Beautiful Life</div><div class="pc-msrp">$50 msrp</div></div><span class="badge b-r">1.8×</span></div>
+        <div class="pc-sep"></div>
+        <div class="pc-stat"><span class="pc-stat-l">Waxflower · USDA benchmark</span><span class="pc-stat-v">$14.50–18.00/bunch</span></div>
+        <div class="pc-stat"><span class="pc-stat-l">Your Budzi cost · auto-matched</span><span class="pc-stat-v">$10.10 ✓</span></div>
+        <div class="pc-alert">
+          <div class="pc-alert-label">⚠ aging alert — act today</div>
+          <div class="pc-alert-row"><span class="pc-alert-stem">Roses (red) · 6 stems · 1 day left</span><span class="pc-alert-action">mark down → $0.55</span></div>
+          <div class="pc-alert-row"><span class="pc-alert-stem">Ranunculus · 8 stems · 2 days left</span><span class="pc-alert-action">feature as daily special</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- PROOF STRIP -->
+<div class="proof">
+  <div class="proof-item"><div class="proof-n">4×</div><div class="proof-l">the markup target most shops miss</div></div>
+  <div class="proof-item"><div class="proof-n">40+</div><div class="proof-l">stem varieties tracked weekly, automatically</div></div>
+  <div class="proof-item"><div class="proof-n">48 hrs</div><div class="proof-l">heads up before stems go to waste</div></div>
+  <div class="proof-item"><div class="proof-n">$0</div><div class="proof-l">to try it — no signup, no catch</div></div>
+</div>
+
+
+<!-- ══════════════════════════════
+     §2 PROBLEM & AGITATION
+══════════════════════════════ -->
+<section class="section" id="problem">
+  <div class="wrap">
+    <div class="pain-grid">
+      <div>
+        <div class="label"><div class="label-line"></div><div class="label-text">Sound familiar?</div></div>
+        <h2 class="h2">Running a flower shop is <em>harder than it looks.</em></h2>
+        <p class="body" style="margin-bottom: 12px;">The design part? You've got that. It's everything around it — the pricing, the waste, the holiday ordering, the invoices from four different vendors — that quietly chips away at what should be a great business.</p>
+        <p class="body">You shouldn't need an accounting degree to know if your shop is actually making money.</p>
+        <div class="bridge-hook">"I always assumed Cheerful Yellow was profitable. Turns out I was selling it at a 1.3× markup."<br><span style="font-size:13px;font-style:normal;font-weight:300;color:var(--slate-lt);">— UpTowne Florist, Powell OH</span></div>
+      </div>
+      <div>
+        <div class="pain-list">
+          <div class="pain-item">
+            <div class="pain-icon">📋</div>
+            <div>
+              <div class="pain-title">Spreadsheets that are always out of date</div>
+              <div class="pain-body">Flower prices move every week. That cost sheet you built in January? It's already wrong. And manually updating it is no one's idea of a good Tuesday morning.</div>
+            </div>
+          </div>
+          <div class="pain-item">
+            <div class="pain-icon">📦</div>
+            <div>
+              <div class="pain-title">Holiday inventory is always feast or famine</div>
+              <div class="pain-body">Too many stems before Valentine's Day. Not enough for Mother's Day. The swings feel unavoidable — but they're not. You just need the right data a few weeks before the order.</div>
+            </div>
+          </div>
+          <div class="pain-item">
+            <div class="pain-icon">🗑️</div>
+            <div>
+              <div class="pain-title">Beautiful flowers going in the compost</div>
+              <div class="pain-body">Every stem you throw away is money you already spent. Most shops lose 10–15% of their weekly inventory to waste. It adds up to thousands of dollars a year — quietly, every week.</div>
+            </div>
+          </div>
+          <div class="pain-item">
+            <div class="pain-icon">🔌</div>
+            <div>
+              <div class="pain-title">Tools that don't talk to each other</div>
+              <div class="pain-body">Your POS does one thing. Your invoices live in email. Your recipes are on paper or in a folder somewhere. Nothing connects. You're the one connecting it all, by hand, all the time.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     §3 SOLUTION BRIDGE
+══════════════════════════════ -->
+<hr class="divider">
+<section class="section-sm bg-linen-dk">
+  <div class="wrap">
+    <div class="label" style="justify-content:center;"><div class="label-line"></div><div class="label-text">The solution</div><div class="label-line"></div></div>
+    <h2 class="h2 h2-center">What your shop feels like <em>when the numbers work for you.</em></h2>
+    <div class="before-after">
+      <div class="ba-col before">
+        <div class="ba-label">Before Petal &amp; Profit</div>
+        <div class="ba-list">
+          <div class="ba-item">Guessing which arrangements are profitable</div>
+          <div class="ba-item">Typing in flower costs manually — when you remember</div>
+          <div class="ba-item">Finding out about price spikes after you've already ordered</div>
+          <div class="ba-item">Watching stems hit vase-life-end without a plan to sell them</div>
+          <div class="ba-item">Recipe cards with no cost data for your designers</div>
+        </div>
+      </div>
+      <div class="ba-col after">
+        <div class="ba-label">After Petal &amp; Profit</div>
+        <div class="ba-list">
+          <div class="ba-item">Live markup multiple on every arrangement, always current</div>
+          <div class="ba-item">Costs auto-update every time you forward a supplier invoice</div>
+          <div class="ba-item">USDA benchmark alerts you when wholesale prices shift</div>
+          <div class="ba-item">48-hour alerts with a suggested markdown price before waste happens</div>
+          <div class="ba-item">Printable recipe cards your team already knows how to use</div>
+        </div>
+      </div>
+    </div>
+    <div class="bridge-intro"><em>Petal &amp; Profit</em> connects the dots quietly, so you can focus on the flowers.</div>
+    <div class="bridge-cta">
+      <a href="/demo.html" target="_blank" class="btn-sage">See the free demo →</a>
+      <a href="#how" class="btn-outline">How it works</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     §4 FEATURES & BENEFITS
+══════════════════════════════ -->
+<hr class="divider">
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="label"><div class="label-line"></div><div class="label-text">Features &amp; benefits</div></div>
+    <h2 class="h2">The four things that <em>actually move margins.</em></h2>
+    <p class="body" style="max-width:520px;">Plus two more coming — one that turns waste into cash flow, and one that nobody in this industry has built for independent shops yet.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-tag">Live Costing</div>
+        <h3>Live profit on every arrangement</h3>
+        <p class="body">Every design shows its ingredient cost, markup multiple (target: 4×), and gross margin %. Arrangements below the 3× floor flag with a minimum suggested price. See the whole collection in one view — updated every time a new invoice comes in.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Invoice Intelligence</div>
+        <h3>Your invoices do the work for you</h3>
+        <p class="body">Forward invoices to your shop's unique email address. We parse vendor PDFs — Budzi, Cleveland Plant & Flower, Asiri Blooms — match line items to your recipe ingredients, and update costs automatically. No manual entry after setup.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Market Data</div>
+        <h3>Real market prices, updated every week</h3>
+        <p class="body">We pull the USDA AMS Boston Terminal Market report (BH_FV201) every week. 40+ stem varieties. When your invoice costs deviate from the national benchmark, you see it — before your next order, not after the margin disappears.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Operations</div>
+        <h3>Recipe cards your team can actually use</h3>
+        <p class="body">Your designers need paper. Every arrangement prints as a clean recipe card with ingredients and quantities in the format your team already uses. The margin data runs in the background. They see the recipe. You see the profit.</p>
+      </div>
+      <div class="phase-card">
+        <div class="phase-badge">Coming — Phase 2</div>
+        <div class="feature-tag">Waste Recovery</div>
+        <h3>Turn aging inventory into same-day revenue</h3>
+        <p class="body">When stems hit the 48-hour window, the system calculates a markdown price that still protects your margin and auto-generates a "Today's Special" you can push to your website or customer text list. Waste becomes cash flow before it hits the compost.</p>
+      </div>
+      <div class="phase-card">
+        <div class="phase-badge">Coming — Phase 3</div>
+        <div class="feature-tag">Petal Network</div>
+        <h3>Distribute aging stems to local B2B buyers</h3>
+        <p class="body">A lightweight marketplace connecting shops with restaurants, hotels, offices, and studios for same-day or next-day stem distribution. You clear inventory at margin. They get fresh flowers cheaper than calling a wholesaler. Nobody has built this for independents.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     §5 SOCIAL PROOF
+══════════════════════════════ -->
+<hr class="divider">
+<section class="section-sm bg-linen-dk">
+  <div class="wrap">
+    <div class="label" style="justify-content:center;"><div class="label-line"></div><div class="label-text">Early beta</div><div class="label-line"></div></div>
+    <h2 class="h2 h2-center">What florists say when they <em>first see their numbers.</em></h2>
+    <div class="testi-grid">
+      <div class="testi">
+        <p class="testi-quote">I always thought Cheerful Yellow was one of our stronger sellers. It turns out we're running 1.3× on ingredient costs. I would never have caught that on my own.</p>
+        <div class="testi-attr">Shop owner · Columbus, OH · beta</div>
+      </div>
+      <div class="testi">
+        <p class="testi-quote">The invoice import is what sold me. I forwarded the PDF and two of my arrangements updated costs automatically. That's hours of Tuesday morning back, every week.</p>
+        <div class="testi-attr">Owner, independent florist · beta</div>
+      </div>
+      <div class="testi">
+        <p class="testi-quote">My lead designer said the recipe card looks just like what we already use, just cleaner. She doesn't see the cost data. It just runs. That's exactly what I needed.</p>
+        <div class="testi-attr">Shop owner · Powell, OH · beta</div>
+      </div>
+    </div>
+    <div class="stats-strip">
+      <div class="stat-block">
+        <div class="stat-n">8–15%</div>
+        <div class="stat-l">of weekly inventory most shops quietly compost</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-n">4× rule</div>
+        <div class="stat-l">the markup that turns a flower shop into a real business</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-n">$6–10K</div>
+        <div class="stat-l">what that wasted inventory costs a typical shop every year</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     §6 HOW IT WORKS
+══════════════════════════════ -->
+<hr class="divider">
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="label"><div class="label-line"></div><div class="label-text">How it works</div></div>
+    <h2 class="h2">Up and running <em>in one week.</em></h2>
+    <p class="body" style="max-width:520px;">No IT project. No switching your POS. One setup session with us, and after that it takes care of itself — costs update automatically every time a new invoice comes in.</p>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-n">01</div>
+        <h3>We connect your invoices</h3>
+        <p class="body">Send us a few recent invoices from your suppliers. <strong>We do the matching work — every ingredient gets a real cost from your actual orders.</strong> One session, and that part is done.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">02</div>
+        <h3>Your arrangements come alive</h3>
+        <p class="body">Your existing recipes load with real costs attached. <strong>Every arrangement shows its live margin — and anything that's underpriced flags immediately</strong> with a suggested price that works.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">03</div>
+        <h3>It keeps itself current</h3>
+        <p class="body">Forward new invoices to your shop's private email address. Costs update on their own within 24 hours. USDA wholesale prices update weekly. <strong>You open it Monday morning and the numbers are already done.</strong></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     §7 PRICING
+══════════════════════════════ -->
+<hr class="divider">
+<section class="section-sm bg-linen-dk" id="pricing">
+  <div class="wrap">
+    <div class="label" style="justify-content:center;"><div class="label-line"></div><div class="label-text">Pricing</div><div class="label-line"></div></div>
+    <h2 class="h2 h2-center">One flat fee. <em>No percentages. No surprises.</em></h2>
+
+    <div class="anchor-box" style="margin-top:32px;">
+      Most florists spend more than $200 a month on flowers that end up in the compost. Petal &amp; Profit pays for itself the first time it catches an arrangement you've been underpricing — which usually happens in the first week.
+    </div>
+
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pc-tier">Free — no signup needed</div>
+        <div class="pc-name">Demo</div>
+        <div class="pc-price"><span class="pc-amt" style="font-size:40px;">$0</span></div>
+        <div class="pc-setup">Open in your browser right now</div>
+        <div class="pc-feats">
+          <div class="pc-feat"><span class="ck">✓</span> Interactive demo with real UpTowne Florist data</div>
+          <div class="pc-feat"><span class="ck">✓</span> All four tabs — recipe analyzer, invoice feed, market prices</div>
+          <div class="pc-feat"><span class="ck">✓</span> Current USDA wholesale price reference</div>
+          <div class="pc-feat"><span class="ck-n">—</span> <span style="opacity:.45;">Your shop's actual data</span></div>
+          <div class="pc-feat"><span class="ck-n">—</span> <span style="opacity:.45;">Invoice auto-import</span></div>
+          <div class="pc-feat"><span class="ck-n">—</span> <span style="opacity:.45;">Live cost updates</span></div>
+        </div>
+        <a href="/demo.html" target="_blank" class="pc-cta free">Open the free demo →</a>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="pc-tier">Full access — your shop</div>
+        <div class="pc-name">Petal &amp; Profit</div>
+        <div class="pc-price"><span class="pc-amt">$200</span><span class="pc-per">/month</span></div>
+        <div class="pc-setup">+ $1,500 one-time setup fee</div>
+        <div class="pc-feats">
+          <div class="pc-feat"><span class="ck">✓</span> Full setup: invoice import, recipe mapping, cost baseline</div>
+          <div class="pc-feat"><span class="ck">✓</span> Your arrangements, your collections, your data</div>
+          <div class="pc-feat"><span class="ck">✓</span> Automatic invoice import via email forwarding</div>
+          <div class="pc-feat"><span class="ck">✓</span> USDA price benchmarks — updated weekly, automatically</div>
+          <div class="pc-feat"><span class="ck">✓</span> Margin alerts when recipes fall below 3× floor</div>
+          <div class="pc-feat"><span class="ck">✓</span> Printable recipe cards for your design room</div>
+          <div class="pc-feat"><span class="ck">✓</span> Phase 2 waste recovery features when available</div>
+        </div>
+        <button class="pc-cta paid" onclick="alert('Ready to talk? Email us and we will get your setup scheduled within the week.')">Talk to us about setup</button>
+      </div>
+    </div>
+
+    <div class="guarantee">
+      <strong>Month-to-month. No contracts. Cancel any time.</strong><br>
+      The $1,500 setup fee covers your invoice import session, recipe mapping, and configuration. Most shops are live within one week.
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     §8 FAQ / OBJECTION HANDLING
+══════════════════════════════ -->
+<hr class="divider">
+<section class="section">
+  <div class="wrap wrap-sm">
+    <div class="label" style="justify-content:center;"><div class="label-line"></div><div class="label-text">Common questions</div><div class="label-line"></div></div>
+    <h2 class="h2 h2-center">Questions we hear before <em>every setup call.</em></h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Do I have to switch my POS system?<span class="faq-icon">+</span></button>
+        <div class="faq-a">No. Petal & Profit sits on top of whatever system you already use — FloristWare, Hana, QuickFlora, Square, even paper. We are not a POS. We are the profit intelligence layer that connects your invoices to your recipes. Your POS records what happened; we tell you what to do about it.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What if I don't use QuickBooks or have a specific POS?<span class="faq-icon">+</span></button>
+        <div class="faq-a">No problem. The core data pipeline is your supplier invoices — PDFs or CSVs from Budzi, Cleveland Plant & Flower, Asiri Blooms, Sam's Club, or whoever you buy from. You forward them to your shop's unique email address and we parse them. No POS connection required.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">How long does setup actually take?<span class="faq-icon">+</span></button>
+        <div class="faq-a">Most shops are fully live within one week. The setup session itself takes about 60–90 minutes: we import your recent invoices, map your ingredients to invoice line items, and configure your recipe library. After that, costs update on their own every time a new invoice arrives.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What if my invoice data is incomplete or messy?<span class="faq-icon">+</span></button>
+        <div class="faq-a">That is exactly the situation we designed for. The demo shows exactly this — some ingredients have costs, some are still waiting for invoice data. The system flags what is costed and what is not, so you know where your margins are solid and where you still need data. Incomplete is fine; you add invoices over time and the picture fills in.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Is this only for retail shops, or does it work for event florists too?<span class="faq-icon">+</span></button>
+        <div class="faq-a">Petal & Profit is built primarily for retail shops running daily standing inventory. If you are a wedding or event florist pricing proposals, EveryStem ($25/month) is genuinely excellent for that use case. We solve a different problem — the shop owner who needs to know whether her everyday inventory is making money week over week.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Can I cancel if it is not working for me?<span class="faq-icon">+</span></button>
+        <div class="faq-a">Yes, month-to-month, cancel any time, no questions asked. The $1,500 setup fee is non-refundable because it covers real human time — your invoice import session and recipe mapping. But the $200/month retainer has no commitment. If it is not delivering value, you stop.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     §9 FINAL CTA
+══════════════════════════════ -->
+
+<!-- PS SECTION -->
+<section style="background:var(--linen-dk);border-top:1px solid var(--border);padding:56px 60px;">
+  <div style="max-width:640px;margin:0 auto;">
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:28px 32px;margin-bottom:18px;">
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;color:var(--sage);margin-bottom:8px;">P.S.</div>
+      <p style="font-size:14px;color:var(--slate);line-height:1.7;">Not convinced yet? <strong style="color:var(--ink);">Calculate what you're currently spending on inventory that doesn't sell.</strong> Most shops lose $500–1,000 a month to waste alone. Petal &amp; Profit at $200/month pays for itself before it even touches your margin numbers. <a href="/demo.html" target="_blank" style="color:var(--sage);font-weight:500;">The demo is free and takes three minutes.</a></p>
+    </div>
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:28px 32px;">
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;color:var(--sage);margin-bottom:8px;">P.P.S.</div>
+      <p style="font-size:14px;color:var(--slate);line-height:1.7;">Still on the fence? <strong style="color:var(--ink);">Try the demo first, commit to nothing.</strong> It runs on real data from a real Ohio flower shop. If it shows you something you didn't know about your own margins — which it almost always does — then we should talk. <a href="/demo.html" target="_blank" style="color:var(--sage);font-weight:500;">Open the demo →</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="wrap">
+    <div class="label" style="justify-content:center;"><div class="label-line"></div><div class="label-text">Ready when you are</div><div class="label-line"></div></div>
+    <h2 class="h2" style="text-align:center;">Pretty flowers.<br><em>Profitable shop.</em></h2>
+    <p class="body" style="font-size:15px;text-align:center;max-width:460px;margin:16px auto 36px;">Try the demo — it's free, it's real data from a real flower shop, and it takes about three minutes to see if this is for you.</p>
+    <div class="btn-row" style="justify-content:center;">
+      <a href="/demo.html" target="_blank" class="btn-sage" style="background:var(--warm,#c8704a);font-size:15px;padding:16px 36px;">Yes, I'm ready to see my margins →</a>
+    </div>
+    <div class="final-note">No credit card. No account. Just the demo.</div>
+  </div>
+</section>
+
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">Petal <em>&amp;</em> Profit</div>
+  <div class="footer-right">$1,500 setup · $200/month · No contracts · © 2026</div>
+<!-- footer already has strategy link --></footer>
+
+
+<!-- PASSWORD GATE -->
+<div id="pw-gate">
+  <div class="pw-box">
+    <div class="pw-name">Petal <em>&amp;</em> Profit</div>
+    <div class="pw-sub">private preview · enter password</div>
+    <input type="password" class="pw-in" id="pw-in" placeholder="password" onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="pw-btn" onclick="checkPw()">Enter</button>
+    <div class="pw-err" id="pw-err"></div>
+  </div>
+</div>
+
+<script>
+// Password
+(function(){
+  if(sessionStorage.getItem('pp_auth')==='ok'){
+    document.addEventListener('DOMContentLoaded',function(){
+      var g=document.getElementById('pw-gate'); if(g) g.style.display='none';
+    });
+  }
+  window.checkPw=function(){
+    var v=document.getElementById('pw-in').value.trim().toLowerCase();
+    if(v==='palooza2026'){
+      sessionStorage.setItem('pp_auth','ok');
+      document.getElementById('pw-gate').style.display='none';
+    } else {
+      var i=document.getElementById('pw-in'), e=document.getElementById('pw-err');
+      i.classList.remove('shake'); void i.offsetWidth; i.classList.add('shake');
+      e.textContent='Wrong password.'; i.value='';
+    }
+  };
+})();
+
+// FAQ accordion
+function toggleFaq(btn) {
+  var answer = btn.nextElementSibling;
+  var isOpen = answer.classList.contains('open');
+  // close all
+  document.querySelectorAll('.faq-a').forEach(function(a){ a.classList.remove('open'); });
+  document.querySelectorAll('.faq-q').forEach(function(q){ q.classList.remove('open'); });
+  if (!isOpen) {
+    answer.classList.add('open');
+    btn.classList.add('open');
+  }
+}
+</script>
+
+</body>
+</html>

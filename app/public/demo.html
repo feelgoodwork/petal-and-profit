@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Floral Profit Palooza — Milano's UpTowne Florist Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1c1a17;
+  --cream: #faf8f3;
+  --sage: #4a7c59;
+  --sage-lt: #edf4ef;
+  --sage-md: #c8dece;
+  --amber: #c17d2a;
+  --amber-lt: #fdf3e4;
+  --red: #b5372a;
+  --red-lt: #fdecea;
+  --stone: #8a8479;
+  --stone-lt: #f0ede6;
+  --border: #e2ddd4;
+  --white: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--ink);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo { font-family: 'Playfair Display', serif; color: white; font-size: 17px; letter-spacing: 0.01em; }
+.logo span { color: #a8d5b5; }
+.shop-name { font-size: 12px; color: #999; letter-spacing: 0.06em; text-transform: uppercase; }
+.demo-badge {
+  background: var(--amber);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── LAYOUT ── */
+.shell { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 56px); }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+.sidebar-section { padding: 0 20px; margin-bottom: 8px; }
+.sidebar-label { font-size: 10px; font-weight: 600; color: var(--stone); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; padding: 0 4px; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--stone);
+  transition: all 0.15s;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: var(--stone-lt); color: var(--ink); }
+.nav-item.active { background: var(--sage-lt); color: var(--sage); font-weight: 500; }
+.nav-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-green { background: var(--sage); }
+.dot-amber { background: var(--amber); }
+.dot-red { background: var(--red); }
+.dot-gray { background: #ccc; }
+.nav-divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ── MAIN ── */
+.main { padding: 32px 36px; overflow-y: auto; }
+
+/* ── PAGE HEADER ── */
+.page-header { margin-bottom: 28px; }
+.page-header h1 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.page-header p { font-size: 13px; color: var(--stone); }
+
+/* ── KPI ROW ── */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+.kpi {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.kpi-label { font-size: 11px; font-weight: 500; color: var(--stone); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+.kpi-value { font-size: 26px; font-weight: 600; color: var(--ink); line-height: 1; margin-bottom: 4px; }
+.kpi-sub { font-size: 12px; color: var(--stone); }
+.kpi-good .kpi-value { color: var(--sage); }
+.kpi-warn .kpi-value { color: var(--amber); }
+.kpi-bad .kpi-value { color: var(--red); }
+
+/* ── SECTION ── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.section-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 600; }
+.section-actions { display: flex; gap: 8px; }
+.btn { font-size: 12px; font-weight: 500; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); color: var(--ink); cursor: pointer; transition: all 0.15s; }
+.btn:hover { background: var(--stone-lt); }
+.btn-primary { background: var(--sage); border-color: var(--sage); color: white; }
+.btn-primary:hover { background: #3d6b4a; }
+
+/* ── RECIPE TABLE ── */
+.recipe-table { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+.recipe-table-header { display: grid; grid-template-columns: 1fr 80px 90px 90px 80px 110px; gap: 0; background: var(--ink); padding: 10px 20px; font-size: 10px; font-weight: 600; color: #aaa; letter-spacing: 0.08em; text-transform: uppercase; }
+.recipe-row { display: grid; grid-template-columns: 1fr 80px 90px 90px 80px 110px; gap: 0; padding: 0 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s; }
+.recipe-row:last-child { border-bottom: none; }
+.recipe-row:hover { background: var(--stone-lt); }
+.recipe-row.expanded { background: var(--sage-lt); }
+.recipe-cell { padding: 14px 0; font-size: 13px; display: flex; align-items: center; }
+.recipe-cell.right { justify-content: flex-end; }
+.recipe-cell.center { justify-content: center; }
+.arr-name { font-weight: 500; color: var(--ink); }
+.markup-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+.pill-green { background: var(--sage-lt); color: var(--sage); }
+.pill-amber { background: var(--amber-lt); color: var(--amber); }
+.pill-red { background: var(--red-lt); color: var(--red); }
+.pill-gray { background: var(--stone-lt); color: var(--stone); }
+
+/* ── EXPANDED DETAIL ── */
+.recipe-detail {
+  background: var(--sage-lt);
+  border-top: 1px solid var(--sage-md);
+  border-bottom: 1px solid var(--sage-md);
+  padding: 0;
+  display: none;
+  overflow: hidden;
+}
+.recipe-detail.open { display: block; }
+.detail-inner { padding: 20px 24px; }
+.detail-cols { display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
+.ing-table { width: 100%; border-collapse: collapse; }
+.ing-table th { font-size: 10px; font-weight: 600; color: var(--stone); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 0 8px 0; border-bottom: 1px solid var(--sage-md); text-align: left; }
+.ing-table th.right { text-align: right; }
+.ing-table td { padding: 7px 0; font-size: 12px; border-bottom: 1px solid rgba(74,124,89,0.12); }
+.ing-table td.right { text-align: right; }
+.ing-table tr:last-child td { border-bottom: none; }
+.ing-costed { color: var(--ink); }
+.ing-missing { color: #bbb; font-style: italic; }
+.cost-val { font-family: 'DM Mono', monospace; font-size: 11px; }
+.detail-stats { background: white; border: 1px solid var(--sage-md); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; }
+.stat-label { font-size: 12px; color: var(--stone); }
+.stat-val { font-size: 14px; font-weight: 600; font-family: 'DM Mono', monospace; }
+.stat-divider { height: 1px; background: var(--border); }
+.stat-big { font-size: 20px; }
+.print-btn { width: 100%; margin-top: 12px; text-align: center; font-size: 12px; padding: 8px; }
+
+/* ── INVOICE FEED SECTION ── */
+.invoice-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.invoice-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.invoice-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--amber-lt); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.invoice-title { font-weight: 600; font-size: 15px; }
+.invoice-sub { font-size: 12px; color: var(--stone); margin-top: 1px; }
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.upload-zone:hover { border-color: var(--sage); background: var(--sage-lt); }
+.upload-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+.upload-sub { font-size: 12px; color: var(--stone); }
+
+/* ── MARKET PRICES PANEL ── */
+.market-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+.market-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.market-stem { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.market-price { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; color: var(--sage); }
+.market-unit { font-size: 11px; color: var(--stone); }
+.market-season { font-size: 10px; padding: 2px 7px; border-radius: 20px; background: var(--amber-lt); color: var(--amber); font-weight: 500; display: inline-block; margin-top: 4px; }
+
+/* ── PRINT RECIPE ── */
+@media print {
+  .topbar, .sidebar, .section-actions, .kpi-row, .invoice-card, .market-grid { display: none !important; }
+  .shell { display: block; }
+  .main { padding: 0; }
+  .recipe-detail { display: block !important; }
+  .print-btn { display: none; }
+}
+
+/* ── TABS ── */
+.tab-row { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+.tab { padding: 10px 18px; font-size: 13px; cursor: pointer; color: var(--stone); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+.tab:hover { color: var(--ink); }
+.tab.active { color: var(--sage); border-bottom-color: var(--sage); font-weight: 500; }
+
+/* ── ALERT BANNER ── */
+.alert { border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; }
+.alert-amber { background: var(--amber-lt); border: 1px solid #e8c078; color: #7a4e12; }
+.alert-green { background: var(--sage-lt); border: 1px solid var(--sage-md); color: #2a5237; }
+.alert-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+</style>
+</head>
+<body>
+<style>
+#pw-gate {
+  position: fixed; inset: 0; z-index: 99999;
+  background: #1c1a17;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Sans', sans-serif;
+}
+.pw-box {
+  background: #232017;
+  border: 1px solid #383530;
+  border-radius: 16px;
+  padding: 48px 40px;
+  width: 360px;
+  text-align: center;
+}
+.pw-logo {
+  font-family: 'Playfair Display', Georgia, serif;
+  color: white; font-size: 20px; margin-bottom: 8px;
+}
+.pw-logo span { color: #7ec894; }
+.pw-sub { font-size: 13px; color: #666; margin-bottom: 32px; }
+.pw-input {
+  width: 100%; padding: 12px 16px;
+  background: #1a1815; border: 1px solid #383530;
+  border-radius: 10px; color: white; font-size: 15px;
+  font-family: 'DM Mono', monospace;
+  text-align: center; letter-spacing: 0.1em;
+  outline: none; margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+.pw-input:focus { border-color: #4a7c59; }
+.pw-input.shake {
+  animation: shake 0.4s ease;
+  border-color: #b5372a;
+}
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+}
+.pw-btn {
+  width: 100%; padding: 12px;
+  background: #4a7c59; border: none; border-radius: 10px;
+  color: white; font-size: 14px; font-weight: 500;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: background 0.2s;
+}
+.pw-btn:hover { background: #3d6b4a; }
+.pw-err { font-size: 12px; color: #e07060; margin-top: 10px; min-height: 18px; }
+.pw-hint { font-size: 11px; color: #444; margin-top: 24px; }
+</style>
+
+<div id="pw-gate">
+  <div class="pw-box">
+    <div class="pw-logo">Floral <span>Profit</span> Palooza</div>
+    <div class="pw-sub">Private preview — enter password to continue</div>
+    <input type="password" class="pw-input" id="pw-input" placeholder="password" autocomplete="off"
+      onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="pw-btn" onclick="checkPw()">Enter</button>
+    <div class="pw-err" id="pw-err"></div>
+    <div class="pw-hint">Questions? Contact Jeff or Lori.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var SESSION_KEY = 'fpp_auth';
+  if(sessionStorage.getItem(SESSION_KEY)==='ok'){
+    document.addEventListener('DOMContentLoaded',function(){
+      var g=document.getElementById('pw-gate');
+      if(g) g.remove();
+    });
+  }
+  window.checkPw = function(){
+    var val = document.getElementById('pw-input').value.trim().toLowerCase();
+    if(val === 'palooza2026'){
+      sessionStorage.setItem(SESSION_KEY,'ok');
+      document.getElementById('pw-gate').remove();
+    } else {
+      var input = document.getElementById('pw-input');
+      var err = document.getElementById('pw-err');
+      input.classList.remove('shake');
+      void input.offsetWidth;
+      input.classList.add('shake');
+      err.textContent = 'Wrong password. Try again.';
+      input.value = '';
+    }
+  };
+})();
+</script>
+
+
+<div class="topbar">
+  <div class="logo">Floral <span>Profit</span> Palooza</div>
+  <div class="shop-name">Milano's UpTowne Florist</div>
+  <div class="demo-badge">Live Demo</div>
+</div>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Views</div>
+      <div class="nav-item active" onclick="showView('dashboard')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="showView('recipes')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Recipe Profit
+      </div>
+      <div class="nav-item" onclick="showView('invoice')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Invoice Feed
+      </div>
+      <div class="nav-item" onclick="showView('market')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Market Prices
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Collections</div>
+      <div class="nav-item" onclick="showView('recipes')">
+        <span class="nav-dot dot-amber"></span>
+        Admin Pro Day
+      </div>
+      <div class="nav-item" style="opacity:0.4; cursor:default;">
+        <span class="nav-dot dot-gray"></span>
+        Mother's Day
+      </div>
+      <div class="nav-item" style="opacity:0.4; cursor:default;">
+        <span class="nav-dot dot-gray"></span>
+        Valentine's Day
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Setup</div>
+      <div class="nav-item" onclick="showView('invoice')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload Invoices
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard">
+      <div class="page-header">
+        <h1>Profit Dashboard</h1>
+        <p>Admin Professionals Day Collection &mdash; 8 arrangements &mdash; Cost data from invoices: Feb 2026</p>
+      </div>
+
+      <div class="alert alert-amber">
+        <span class="alert-icon">⚠</span>
+        <div><strong>18 of 66 ingredient costs are mapped.</strong> Remaining costs need invoice data. Your margins below are partial — upload more invoices to complete the picture. <span style="text-decoration:underline;cursor:pointer;" onclick="showView('invoice')">Upload invoices →</span></div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Collection MSRP</div>
+          <div class="kpi-value">$405</div>
+          <div class="kpi-sub">8 arrangements</div>
+        </div>
+        <div class="kpi kpi-warn">
+          <div class="kpi-label">Known Ingredient Cost</div>
+          <div class="kpi-value">$168</div>
+          <div class="kpi-sub">partial — 18 of 66 mapped</div>
+        </div>
+        <div class="kpi kpi-good">
+          <div class="kpi-label">At-or-Above 4x Target</div>
+          <div class="kpi-value">2 / 8</div>
+          <div class="kpi-sub">As Good As Gold, Thanks For All You Do</div>
+        </div>
+        <div class="kpi kpi-bad">
+          <div class="kpi-label">Below 3x Floor</div>
+          <div class="kpi-value">4 / 8</div>
+          <div class="kpi-sub">based on known costs only</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">Arrangement Margin Overview</div>
+        <div class="section-actions">
+          <button class="btn" onclick="showView('recipes')">Full Recipe View</button>
+        </div>
+      </div>
+
+      <div class="recipe-table">
+        <div class="recipe-table-header">
+          <div>Arrangement</div>
+          <div style="text-align:right">MSRP</div>
+          <div style="text-align:right">Known Cost</div>
+          <div style="text-align:right">Margin $</div>
+          <div style="text-align:center">Markup</div>
+          <div style="text-align:center">Status</div>
+        </div>
+        <div id="dashboard-rows"></div>
+      </div>
+    </div>
+
+    <!-- RECIPES VIEW -->
+    <div id="view-recipes" style="display:none">
+      <div class="page-header">
+        <h1>Recipe Profit Analyzer</h1>
+        <p>Click any arrangement to expand. Print individual recipes for your design room.</p>
+      </div>
+
+      <div class="tab-row">
+        <div class="tab active" onclick="filterRecipes('all', this)">All (8)</div>
+        <div class="tab" onclick="filterRecipes('good', this)">Meets Target (2)</div>
+        <div class="tab" onclick="filterRecipes('warn', this)">Low Markup (2)</div>
+        <div class="tab" onclick="filterRecipes('bad', this)">Below Floor (4)</div>
+      </div>
+
+      <div id="recipe-list"></div>
+    </div>
+
+    <!-- INVOICE VIEW -->
+    <div id="view-invoice" style="display:none">
+      <div class="page-header">
+        <h1>Invoice Feed</h1>
+        <p>Upload supplier invoices to auto-populate ingredient costs. One-time setup, then ongoing imports keep your costs live.</p>
+      </div>
+
+      <div class="alert alert-green">
+        <span class="alert-icon">✓</span>
+        <div><strong>3 invoices loaded from setup.</strong> Feb 2026: Budzi (V0100470, V0184899), Cleveland Plant & Flower Co. (12-60671, 12-60749), Asiri Blooms LLC. These auto-populated costs for 18 ingredients.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+        <div class="invoice-card">
+          <div class="invoice-header">
+            <div class="invoice-icon">📄</div>
+            <div>
+              <div class="invoice-title">One-Time Setup Import</div>
+              <div class="invoice-sub">Upload past invoices to seed your cost database</div>
+            </div>
+          </div>
+          <div class="upload-zone" onclick="simulateUpload(this)">
+            <div class="upload-title">Drop invoice files here</div>
+            <div class="upload-sub">PDF, CSV, Excel — we parse them all<br>Supports Budzi, Cleveland Plant & Flower, Asiri Blooms, Sam's Club</div>
+          </div>
+        </div>
+
+        <div class="invoice-card">
+          <div class="invoice-header">
+            <div class="invoice-icon">🔄</div>
+            <div>
+              <div class="invoice-title">Ongoing Auto-Import</div>
+              <div class="invoice-sub">Email invoices to your shop's unique address</div>
+            </div>
+          </div>
+          <div style="background:var(--stone-lt);border-radius:10px;padding:16px;font-family:'DM Mono',monospace;font-size:13px;color:var(--ink);margin-bottom:12px;">
+            <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a8c1c6dec7c1cbcddbe8c5c1c4c9c6c7db86cec4c7dac1dbdcd8dac7cec1dcdb86cbc7c5">[email&#160;protected]</a>
+          </div>
+          <div style="font-size:12px;color:var(--stone);line-height:1.6;">Forward supplier invoices to this address. Costs update automatically within 24 hours. Supported vendors auto-recognized.</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">Ingredient Mapping Status</div>
+        <div style="font-size:13px;color:var(--stone)">18 mapped &middot; 48 need invoices</div>
+      </div>
+
+      <div class="recipe-table">
+        <div class="recipe-table-header" style="grid-template-columns:1fr 1fr 100px 100px 80px;">
+          <div>Ingredient</div>
+          <div>Invoice Item Matched</div>
+          <div style="text-align:right">Unit Price</div>
+          <div style="text-align:center">Vendor</div>
+          <div style="text-align:center">Status</div>
+        </div>
+        <div id="mapping-rows"></div>
+      </div>
+    </div>
+
+    <!-- MARKET VIEW -->
+    <div id="view-market" style="display:none">
+      <div class="page-header">
+        <h1>USDA Market Prices</h1>
+        <p>Boston Terminal Market — BH_FV201 — Updated weekly. These are wholesale benchmarks. Your local costs auto-populate from your invoices.</p>
+      </div>
+
+      <div class="alert alert-green">
+        <span class="alert-icon">📡</span>
+        <div><strong>Last updated Mar 17, 2026.</strong> USDA AMS publishes this data free weekly. We pull it automatically so your cost benchmarks are always current.</div>
+      </div>
+
+      <div class="market-grid" id="market-grid"></div>
+    </div>
+
+  </main>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ── DATA ─────────────────────────────────────────────────────────────────────
+const arrangements = [
+  {name:"As Good As Gold", msrp:55, status:"good", ingredients:[
+    {name:"5\" Square Metal Container",qty:1,cost:null},
+    {name:"Wet Floral Foam",qty:1,cost:null},
+    {name:"Myrtle",qty:1,cost:7.40},
+    {name:"Sword Fern",qty:1,cost:5.53},
+    {name:"Lily Grass",qty:1,cost:null},
+    {name:"Yellow Roses",qty:4,cost:null},
+    {name:"Yellow Fuji Mum",qty:1,cost:null},
+    {name:"Solidago",qty:2,cost:null},
+    {name:"Equisetum (Horsetail)",qty:3,cost:null},
+  ]},
+  {name:"Thanks For All You Do!", msrp:45, status:"good", ingredients:[
+    {name:"4\" Terra Cotta Rose Pot w/ Liner",qty:1,cost:null},
+    {name:"Wet Floral Foam",qty:1,cost:null},
+    {name:"Galax Leaves",qty:1,cost:null},
+    {name:"Myrtle Tips",qty:1,cost:null},
+    {name:"Pittosporum",qty:1,cost:6.01},
+    {name:"Lily Grass",qty:1,cost:null},
+    {name:"Hot Pink Roses",qty:4,cost:0.66},
+    {name:"'Sunset' Heather",qty:1.5,cost:null},
+  ]},
+  {name:"Make 'Em Smile", msrp:40, status:"warn", ingredients:[
+    {name:"4\" Lime Green Metal Pail",qty:1,cost:null},
+    {name:"Wet Floral Foam",qty:1,cost:null},
+    {name:"Leather Leaf",qty:1,cost:null},
+    {name:"Variegated Pittosporum",qty:1,cost:6.73},
+    {name:"White Waxflower",qty:1,cost:10.10},
+    {name:"Green Button Poms ('Kermit')",qty:2,cost:null},
+    {name:"Light Pink Mini Carnations",qty:2,cost:1.66},
+    {name:"White Cushion Poms",qty:2,cost:null},
+  ]},
+  {name:"Fruit Sorbet", msrp:45, status:"bad", ingredients:[
+    {name:"5.5\" Rectangular Vase",qty:1,cost:null},
+    {name:"Variegated Pittosporum",qty:1,cost:6.73},
+    {name:"Pink Gerberas",qty:5,cost:null},
+    {name:"'Kermit' Pompons",qty:3,cost:null},
+    {name:"White Waxflower",qty:2,cost:10.10},
+  ]},
+  {name:"Cheerful Yellow", msrp:60, status:"bad", ingredients:[
+    {name:"Rectangular Basket",qty:1,cost:null},
+    {name:"Baby Blue Eucalyptus",qty:1,cost:null},
+    {name:"Salal",qty:1,cost:5.33},
+    {name:"Asparagus Fern (Spring Eri)",qty:1,cost:null},
+    {name:"Sword Fern",qty:1,cost:5.53},
+    {name:"Yellow Snapdragons",qty:3,cost:5.33},
+    {name:"Yellow Lilies",qty:2,cost:null},
+    {name:"Yellow Daisy Poms",qty:2,cost:9.71},
+  ]},
+  {name:"Green Envy", msrp:55, status:"warn", ingredients:[
+    {name:"4\" Cube Vase",qty:1,cost:null},
+    {name:"Green Pittosporum",qty:1,cost:6.01},
+    {name:"Green Fuji Spider Mums",qty:2,cost:5.81},
+    {name:"Green Carnations",qty:7,cost:null},
+    {name:"Green Trick Dianthus",qty:3,cost:null},
+    {name:"Green Hydrangea",qty:1,cost:1.63},
+    {name:"Sheer Green Polka Dot Ribbon/Tulle",qty:1,cost:null},
+  ]},
+  {name:"Beautiful Life", msrp:50, status:"bad", ingredients:[
+    {name:"7\" Ginger Jar Vase",qty:1,cost:null},
+    {name:"Variegated Pittosporum",qty:1,cost:6.73},
+    {name:"Lime Green 'Fuji' Spider Mums",qty:4,cost:5.11},
+    {name:"Roses",qty:3,cost:null},
+    {name:"Orange Mini Carnations",qty:3,cost:null},
+    {name:"Purple 'Monte Casino' Aster",qty:1.5,cost:null},
+    {name:"'Misty Blue' Limonium",qty:1,cost:null},
+    {name:"Orange w/ White Polka Dot Ribbon",qty:1,cost:null},
+  ]},
+  {name:"Floral Tapestry", msrp:55, status:"bad", ingredients:[
+    {name:"7\" Rectangular Vase",qty:1,cost:null},
+    {name:"Leather Leaf",qty:1,cost:null},
+    {name:"Variegated Pittosporum",qty:1,cost:6.73},
+    {name:"Hosta Leaves",qty:1,cost:null},
+    {name:"Red Gerberas",qty:2,cost:null},
+    {name:"Peach Roses",qty:2,cost:null},
+    {name:"Purple 'Moonshade' Carnations",qty:3,cost:null},
+    {name:"'Black-Eyed Susan' Poms",qty:3,cost:null},
+    {name:"Purple Liatris",qty:2,cost:null},
+    {name:"Red Hypericum",qty:3,cost:null},
+    {name:"Solidago",qty:3,cost:null},
+  ]},
+];
+
+const marketPrices = [
+  {stem:"Roses (hybrid tea)",price:"$1.25–1.50",unit:"per stem",season:"year-round"},
+  {stem:"Carnations",price:"$0.55–0.65",unit:"per stem",season:"year-round"},
+  {stem:"Hydrangea",price:"$2.75–3.25",unit:"per stem",season:"spring–fall"},
+  {stem:"Ranunculus",price:"$25–28.50",unit:"bunch/10s",season:"spring only"},
+  {stem:"Waxflower",price:"$14.50–18.00",unit:"per bunch",season:"winter–spring"},
+  {stem:"Alstroemeria",price:"$8.50–10.00",unit:"bunch/10s",season:"year-round"},
+  {stem:"Sunflower (large)",price:"$8.50",unit:"bunch/5s",season:"summer–fall"},
+  {stem:"Chrysanthemum",price:"$1.00–1.50",unit:"per stem",season:"year-round"},
+  {stem:"Delphinium",price:"$20–25.00",unit:"bunch/10s",season:"spring–summer"},
+  {stem:"Gerbera",price:"$1.50–2.00",unit:"per stem",season:"spring–summer"},
+  {stem:"Solidago",price:"$10.00–13.00",unit:"per bunch",season:"summer–fall"},
+  {stem:"Calla lily",price:"$2.40–3.50",unit:"per stem",season:"spring–fall"},
+];
+
+const ingredientMapping = [
+  {ing:"Myrtle",invoice:"Myrtle (TUTU) - Cleveland Plant & Flower Co.",price:7.40,vendor:"Cleveland P&F"},
+  {ing:"Sword Fern",invoice:"Swordfern (BLLA) - Cleveland Plant & Flower Co.",price:5.53,vendor:"Cleveland P&F"},
+  {ing:"Pittosporum",invoice:"Pittosporum (CFG PITT) - Cleveland Plant & Flower Co.",price:6.01,vendor:"Cleveland P&F"},
+  {ing:"Hot Pink Roses",invoice:"Rose Color 50CMS Hot Explorer Hot Pink - Budzi",price:0.66,vendor:"Budzi"},
+  {ing:"Variegated Pittosporum",invoice:"Green Aspidistra Variegated - Budzi",price:6.73,vendor:"Budzi"},
+  {ing:"White Waxflower",invoice:"Waxflower (SOLE) - Cleveland Plant & Flower Co.",price:10.10,vendor:"Cleveland P&F"},
+  {ing:"Light Pink Mini Carnations",invoice:"Calla Lily Mini 50CMS Hot Pink - Budzi",price:1.66,vendor:"Budzi"},
+  {ing:"Salal",invoice:"Salal Tips (CFG SALALTIP) - Cleveland Plant & Flower Co.",price:5.33,vendor:"Cleveland P&F"},
+  {ing:"Yellow Snapdragons",invoice:"Snapdragon 75CMS Assorted - Budzi",price:5.33,vendor:"Budzi"},
+  {ing:"Yellow Daisy Poms",invoice:"Snapdragon (NFL) - Cleveland Plant & Flower Co.",price:9.71,vendor:"Cleveland P&F"},
+  {ing:"Green Pittosporum",invoice:"Pittosporum (CFG PITT) - Cleveland Plant & Flower Co.",price:6.01,vendor:"Cleveland P&F"},
+  {ing:"Green Fuji Spider Mums",invoice:"Mums Fuji/Spider Select Assorted - Budzi",price:5.81,vendor:"Budzi"},
+  {ing:"Green Hydrangea",invoice:"Hydrangea Select Esmeralda Solid Green - Budzi",price:1.63,vendor:"Budzi"},
+  {ing:"Lime Green 'Fuji' Spider Mums",invoice:"Mums Fuji/Spider Select Green (Dark) CLE - Budzi",price:5.11,vendor:"Budzi"},
+];
+
+const unmappedIngredients = [
+  "5\" Square Metal Container","Wet Floral Foam","Lily Grass","Yellow Roses","Yellow Fuji Mum","Solidago","Equisetum (Horsetail)",
+  "4\" Terra Cotta Rose Pot w/ Liner","Galax Leaves","Myrtle Tips","'Sunset' Heather",
+  "4\" Lime Green Metal Pail","Leather Leaf","Green Button Poms ('Kermit')","White Cushion Poms",
+  "5.5\" Rectangular Vase","Pink Gerberas","'Kermit' Pompons",
+  "Rectangular Basket","Baby Blue Eucalyptus","Asparagus Fern (Spring Eri)","Yellow Lilies",
+  "4\" Cube Vase","Green Carnations","Green Trick Dianthus","Sheer Green Polka Dot Ribbon/Tulle",
+  "7\" Ginger Jar Vase","Roses","Orange Mini Carnations","Purple 'Monte Casino' Aster","'Misty Blue' Limonium","Orange w/ White Polka Dot Ribbon",
+  "7\" Rectangular Vase","Hosta Leaves","Red Gerberas","Peach Roses","Purple 'Moonshade' Carnations","'Black-Eyed Susan' Poms","Purple Liatris","Red Hypericum",
+];
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function calcArr(arr) {
+  const knownCost = arr.ingredients.reduce((s,i) => s + (i.cost ? i.cost*i.qty : 0), 0);
+  const missing = arr.ingredients.filter(i => !i.cost).length;
+  const markup = knownCost > 0 ? arr.msrp / knownCost : null;
+  const gm = arr.msrp - knownCost;
+  const gmPct = gm / arr.msrp;
+  return {knownCost, missing, markup, gm, gmPct};
+}
+
+function markupClass(mu) {
+  if (!mu) return 'gray';
+  if (mu >= 4) return 'green';
+  if (mu >= 3) return 'amber';
+  return 'red';
+}
+function markupLabel(mu, missing) {
+  if (!mu && missing > 0) return 'incomplete';
+  if (!mu) return '—';
+  return mu.toFixed(1) + 'x';
+}
+function statusLabel(mu, missing) {
+  if (missing > 0 && (!mu || mu < 4)) return `${missing} costs missing`;
+  if (!mu) return 'no cost data';
+  if (mu >= 4) return 'meets target';
+  if (mu >= 3) return 'low markup';
+  return 'below floor';
+}
+function fmt(n) { return '$'+n.toFixed(2); }
+
+// ── RENDER DASHBOARD ─────────────────────────────────────────────────────────
+function renderDashboard() {
+  const el = document.getElementById('dashboard-rows');
+  el.innerHTML = arrangements.map(arr => {
+    const {knownCost,missing,markup,gm} = calcArr(arr);
+    const cls = markupClass(markup);
+    return `<div class="recipe-row" onclick="showView('recipes')" style="grid-template-columns:1fr 80px 90px 90px 80px 110px;">
+      <div class="recipe-cell"><span class="arr-name">${arr.name}</span></div>
+      <div class="recipe-cell right">${fmt(arr.msrp)}</div>
+      <div class="recipe-cell right" style="color:${missing>0?'#bbb':'inherit'}">${knownCost>0?fmt(knownCost):'—'}${missing>0?` <span style="font-size:10px;color:#bbb">(+${missing})</span>`:''}</div>
+      <div class="recipe-cell right" style="color:${gm>0?'#4a7c59':'#bbb'}">${knownCost>0?fmt(gm):'—'}</div>
+      <div class="recipe-cell center"><span class="markup-pill pill-${cls}">${markupLabel(markup,missing)}</span></div>
+      <div class="recipe-cell center" style="font-size:11px;color:var(--stone)">${statusLabel(markup,missing)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── RENDER RECIPES ────────────────────────────────────────────────────────────
+let currentFilter = 'all';
+function renderRecipes(filter) {
+  currentFilter = filter || currentFilter;
+  const el = document.getElementById('recipe-list');
+  const filtered = currentFilter === 'all' ? arrangements : arrangements.filter(a => {
+    const {markup} = calcArr(a);
+    if (currentFilter === 'good') return markup && markup >= 4;
+    if (currentFilter === 'warn') return markup && markup >= 3 && markup < 4;
+    if (currentFilter === 'bad') return !markup || markup < 3;
+    return true;
+  });
+
+  el.innerHTML = filtered.map((arr, i) => {
+    const {knownCost,missing,markup,gm,gmPct} = calcArr(arr);
+    const cls = markupClass(markup);
+    const ingRows = arr.ingredients.map(ing => {
+      const lineTotal = ing.cost ? ing.cost * ing.qty : null;
+      return `<tr>
+        <td class="${ing.cost?'ing-costed':'ing-missing'}">${ing.name}</td>
+        <td class="right"><span class="cost-val">${ing.qty % 1 === 0 ? ing.qty : ing.qty.toFixed(1)}</span></td>
+        <td class="right"><span class="cost-val ${ing.cost?'':'ing-missing'}">${ing.cost?fmt(ing.cost):'—'}</span></td>
+        <td class="right"><span class="cost-val ${lineTotal?'':'ing-missing'}">${lineTotal?fmt(lineTotal):'—'}</span></td>
+      </tr>`;
+    }).join('');
+
+    const targetMin = knownCost > 0 ? fmt(knownCost * 4) : null;
+    const statusMsg = missing > 0
+      ? `<span style="color:var(--amber)">⚠ ${missing} ingredients still need invoice data</span>`
+      : markup >= 4 ? `<span style="color:var(--sage)">✓ Meets 4× markup target</span>`
+      : markup >= 3 ? `<span style="color:var(--amber)">↑ Low — target price ${targetMin} for 4× markup</span>`
+      : `<span style="color:var(--red)">⚑ Below 3× floor — reprice immediately${targetMin?' (target '+targetMin+')':''}</span>`;
+
+    return `<div class="recipe-table" style="margin-bottom:16px;">
+      <div class="recipe-row" onclick="toggleDetail('detail-${i}')" style="grid-template-columns:1fr 80px 90px 90px 80px 110px;cursor:pointer;">
+        <div class="recipe-cell"><span class="arr-name">${arr.name}</span></div>
+        <div class="recipe-cell right">${fmt(arr.msrp)}</div>
+        <div class="recipe-cell right" style="color:${missing>0?'#bbb':'inherit'}">${knownCost>0?fmt(knownCost):'—'}</div>
+        <div class="recipe-cell right" style="color:${gm>0?'#4a7c59':'#bbb'}">${knownCost>0?fmt(gm):'—'}</div>
+        <div class="recipe-cell center"><span class="markup-pill pill-${cls}">${markupLabel(markup,missing)}</span></div>
+        <div class="recipe-cell center" style="font-size:11px;color:var(--stone)">${missing>0?missing+' missing':'&nbsp;'}</div>
+      </div>
+      <div class="recipe-detail" id="detail-${i}">
+        <div class="detail-inner">
+          <div class="detail-cols">
+            <div>
+              <table class="ing-table">
+                <thead><tr><th>Ingredient</th><th class="right">Qty</th><th class="right">Unit Cost</th><th class="right">Total</th></tr></thead>
+                <tbody>${ingRows}</tbody>
+              </table>
+            </div>
+            <div>
+              <div class="detail-stats">
+                <div class="stat-row"><span class="stat-label">MSRP</span><span class="stat-val">${fmt(arr.msrp)}</span></div>
+                <div class="stat-row"><span class="stat-label">Known ingredient cost</span><span class="stat-val">${knownCost>0?fmt(knownCost):'—'}</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-row"><span class="stat-label">Gross margin $</span><span class="stat-val" style="color:${gm>0?'var(--sage)':'#bbb'}">${knownCost>0?fmt(gm):'—'}</span></div>
+                <div class="stat-row"><span class="stat-label">Gross margin %</span><span class="stat-val" style="color:${gmPct>0.65?'var(--sage)':gmPct>0.5?'var(--amber)':'var(--red)'}">${knownCost>0?(gmPct*100).toFixed(1)+'%':'—'}</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-row">
+                  <span class="stat-label">Markup multiple</span>
+                  <span class="stat-val stat-big" style="color:${cls==='green'?'var(--sage)':cls==='amber'?'var(--amber)':'var(--red)'}">${markupLabel(markup,0)}</span>
+                </div>
+                <div style="font-size:11px;margin-top:4px;">${statusMsg}</div>
+                <div class="stat-divider"></div>
+                <button class="btn print-btn" onclick="window.print()">🖨 Print Recipe Card</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDetail(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+function filterRecipes(f, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderRecipes(f);
+}
+
+// ── RENDER MAPPING ────────────────────────────────────────────────────────────
+function renderMapping() {
+  const el = document.getElementById('mapping-rows');
+  const mapped = ingredientMapping.map(m =>
+    `<div class="recipe-row" style="grid-template-columns:1fr 1fr 100px 100px 80px;">
+      <div class="recipe-cell">${m.ing}</div>
+      <div class="recipe-cell" style="font-size:11px;color:var(--stone);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.invoice}</div>
+      <div class="recipe-cell right"><span class="cost-val">${fmt(m.price)}</span></div>
+      <div class="recipe-cell center" style="font-size:11px;">${m.vendor}</div>
+      <div class="recipe-cell center"><span class="markup-pill pill-green">mapped</span></div>
+    </div>`
+  ).join('');
+
+  const unmapped = unmappedIngredients.slice(0,20).map(ing =>
+    `<div class="recipe-row" style="grid-template-columns:1fr 1fr 100px 100px 80px;opacity:0.6;">
+      <div class="recipe-cell" style="color:var(--stone)">${ing}</div>
+      <div class="recipe-cell" style="font-size:11px;color:#bbb;font-style:italic">no invoice match yet</div>
+      <div class="recipe-cell right" style="color:#ccc">—</div>
+      <div class="recipe-cell center">—</div>
+      <div class="recipe-cell center"><span class="markup-pill pill-amber">needs invoice</span></div>
+    </div>`
+  ).join('');
+
+  el.innerHTML = mapped + unmapped;
+}
+
+// ── RENDER MARKET ─────────────────────────────────────────────────────────────
+function renderMarket() {
+  const el = document.getElementById('market-grid');
+  el.innerHTML = marketPrices.map(p => `
+    <div class="market-card">
+      <div class="market-stem">${p.stem}</div>
+      <div class="market-price">${p.price}</div>
+      <div class="market-unit">${p.unit}</div>
+      <div class="market-season">${p.season}</div>
+    </div>`).join('');
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function showView(v) {
+  ['dashboard','recipes','invoice','market'].forEach(id => {
+    document.getElementById('view-'+id).style.display = id===v?'block':'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  if (v==='recipes') renderRecipes();
+  if (v==='invoice') renderMapping();
+  if (v==='market') renderMarket();
+}
+
+function simulateUpload(zone) {
+  zone.innerHTML = '<div class="upload-title" style="color:var(--sage)">✓ Processing invoices...</div><div class="upload-sub">Parsing line items · Matching ingredients · Updating costs</div>';
+  setTimeout(() => {
+    zone.innerHTML = '<div class="upload-title" style="color:var(--sage)">✓ 3 invoices imported — 6 new costs mapped</div><div class="upload-sub" style="color:var(--stone)">Refresh Recipe Analyzer to see updated margins</div>';
+  }, 1800);
+}
+
+// ── INIT ──�
