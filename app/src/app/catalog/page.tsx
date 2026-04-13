@@ -22,6 +22,7 @@ interface CatalogEntry {
 export default function CatalogPage() {
   const [entries, setEntries] = useState<CatalogEntry[]>([]);
   const [building, setBuilding] = useState(false);
+  const [classifying, setClassifying] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
   async function fetchCatalog() {
@@ -45,6 +46,22 @@ export default function CatalogPage() {
     setBuilding(false);
   }
 
+  async function classifyWithAI() {
+    setClassifying(true);
+    setResult(null);
+    const res = await fetch('/api/catalog/classify', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      setResult(
+        `AI classified ${data.classified} items: ${data.new_matches} new matches, ${data.marked_non_flower} marked as non-flower, ${data.errors} errors.`
+      );
+      fetchCatalog();
+    } else {
+      setResult(`Error: ${data.error}`);
+    }
+    setClassifying(false);
+  }
+
   useEffect(() => { fetchCatalog(); }, []);
 
   const flowers = entries.filter(e => e.category === 'flower');
@@ -59,9 +76,14 @@ export default function CatalogPage() {
             {entries.length} product types ({flowers.length} flowers, {foliage.length} foliage)
           </p>
         </div>
-        <Button onClick={buildCatalog} disabled={building}>
-          {building ? 'Building...' : 'Rebuild Catalog & Match'}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={buildCatalog} disabled={building}>
+            {building ? 'Building...' : 'Rebuild Catalog & Match'}
+          </Button>
+          <Button onClick={classifyWithAI} disabled={classifying}>
+            {classifying ? 'Classifying...' : 'Classify Unmatched with AI'}
+          </Button>
+        </div>
       </div>
 
       {result && (

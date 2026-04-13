@@ -3,10 +3,21 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
+
+interface USDABenchmark {
+  low: number;
+  high: number;
+  mostly: number;
+  report_date: string;
+  commodity: string;
+  not_found?: boolean;
+}
 
 interface CatalogDetail {
   id: number;
@@ -31,12 +42,48 @@ interface CatalogDetail {
 export default function CatalogDetailPage() {
   const { id } = useParams();
   const [data, setData] = useState<CatalogDetail | null>(null);
+  const [usda, setUsda] = useState<USDABenchmark | null>(null);
+  const [manualCost, setManualCost] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  function fetchData() {
     fetch(`/api/catalog/${id}`)
       .then(r => r.json())
-      .then(setData);
-  }, [id]);
+      .then(d => {
+        setData(d);
+        fetch(`/api/usda?type=${encodeURIComponent(d.canonical_name)}`)
+          .then(r => r.json())
+          .then(setUsda)
+          .catch(() => {});
+      });
+  }
+
+  useEffect(() => { fetchData(); }, [id]);
+
+  async function saveManualCost() {
+    if (!manualCost) return;
+    setSaving(true);
+    await fetch(`/api/catalog/${id}/cost`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ unit_cost: parseFloat(manualCost), source: 'manual' }),
+    });
+    setManualCost('');
+    fetchData();
+    setSaving(false);
+  }
+
+  async function useUSDAPrice() {
+    if (!usda || usda.not_found) return;
+    setSaving(true);
+    await fetch(`/api/catalog/${id}/cost`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ unit_cost: usda.mostly, source: 'usda', notes: `USDA Boston Terminal ${usda.report_date} (${usda.commodity})` }),
+    });
+    fetchData();
+    setSaving(false);
+  }
 
   if (!data) return <div className="p-8 text-stone-400">Loading...</div>;
 
@@ -99,6 +146,53 @@ export default function CatalogDetailPage() {
           </div>
         </div>
       )}
+
+      {/* USDA Benchmark + Manual Cost Entry (always shown) */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        {/* USDA Benchmark */}
+        <div className={`border rounded-lg p-4 ${usda && !usda.not_found ? 'bg-blue-50 border-blue-200' : 'bg-white'}`}>
+          <p className="text-xs text-stone-400 uppercase mb-2">USDA Benchmark (Boston Terminal)</p>
+          {usda === null ? (
+            <p className="text-sm text-stone-400">Loading...</p>
+          ) : usda.not_found ? (
+            <p className="text-sm text-stone-400">No USDA data for this product type</p>
+          ) : (
+            <>
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="text-xl font-mono font-medium text-blue-700">${usda.mostly.toFixed(2)}</span>
+                <span className="text-xs text-stone-400">mostly</span>
+                <span className="text-sm font-mono text-stone-500">${usda.low.toFixed(2)} - ${usda.high.toFixed(2)}</span>
+              </div>
+              <p className="text-[10px] text-stone-400 mb-2">Report: {usda.report_date} | {usda.commodity}</p>
+              <Button size="sm" variant="outline" onClick={useUSDAPrice} disabled={saving}>
+                Use USDA price (${usda.mostly.toFixed(2)}/stem)
+              </Button>
+            </>
+          )}
+        </div>
+
+        {/* Manual Cost Entry */}
+        <div className="bg-white border rounded-lg p-4">
+          <p className="text-xs text-stone-400 uppercase mb-2">Set Manual Cost</p>
+          <div className="flex items-center gap-2">
+            <span className="text-stone-500">$</span>
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              value={manualCost}
+              onChange={(e) => setManualCost(e.target.value)}
+              className="w-24 h-8 text-sm font-mono"
+            />
+            <span className="text-sm text-stone-400">/stem</span>
+            <Button size="sm" onClick={saveManualCost} disabled={saving || !manualCost}>
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+          <p className="text-[10px] text-stone-400 mt-2">Use this when no invoice data exists (foliage, supplies)</p>
+        </div>
+      </div>
 
       {/* Used In Recipes */}
       {data.recipe_usage.length > 0 && (
