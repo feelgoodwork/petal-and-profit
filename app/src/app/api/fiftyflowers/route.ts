@@ -5,9 +5,34 @@ import type { NextRequest } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
     const collection = request.nextUrl.searchParams.get('collection');
+    const catalogType = request.nextUrl.searchParams.get('type');
 
-    if (collection) {
-      // Fetch a single collection
+    // Look up stored data by catalog type
+    if (catalogType) {
+      const sql = getDb();
+      const products = await sql`
+        SELECT * FROM fiftyflowers_benchmarks
+        WHERE catalog_type = ${catalogType}
+        ORDER BY price_per_stem
+      `;
+
+      if (products.length === 0) {
+        return Response.json({ not_found: true });
+      }
+
+      const withPrice = products.filter(p => p.price_per_stem != null);
+      const prices = withPrice.map(p => Number(p.price_per_stem));
+
+      return Response.json({
+        avg_per_stem: prices.reduce((a, b) => a + b, 0) / prices.length,
+        min_per_stem: Math.min(...prices),
+        max_per_stem: Math.max(...prices),
+        count: prices.length,
+        products: withPrice.slice(0, 10),
+      });
+    }
+
+    if (collection && collection !== 'none') {
       const products = await fetchCollectionPricing(collection);
       return Response.json({ collection, products, count: products.length });
     }

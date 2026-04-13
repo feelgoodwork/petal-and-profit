@@ -19,6 +19,14 @@ interface USDABenchmark {
   not_found?: boolean;
 }
 
+interface FFBenchmark {
+  avg_per_stem: number;
+  min_per_stem: number;
+  max_per_stem: number;
+  count: number;
+  not_found?: boolean;
+}
+
 interface CatalogDetail {
   id: number;
   canonical_name: string;
@@ -43,6 +51,7 @@ export default function CatalogDetailPage() {
   const { id } = useParams();
   const [data, setData] = useState<CatalogDetail | null>(null);
   const [usda, setUsda] = useState<USDABenchmark | null>(null);
+  const [ff, setFf] = useState<FFBenchmark | null>(null);
   const [manualCost, setManualCost] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -54,6 +63,10 @@ export default function CatalogDetailPage() {
         fetch(`/api/usda?type=${encodeURIComponent(d.canonical_name)}`)
           .then(r => r.json())
           .then(setUsda)
+          .catch(() => {});
+        fetch(`/api/fiftyflowers?collection=none&type=${encodeURIComponent(d.canonical_name)}`)
+          .then(r => r.json())
+          .then(setFf)
           .catch(() => {});
       });
   }
@@ -147,8 +160,8 @@ export default function CatalogDetailPage() {
         </div>
       )}
 
-      {/* USDA Benchmark + Manual Cost Entry (always shown) */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      {/* Benchmarks + Manual Cost (always shown) */}
+      <div className="grid grid-cols-3 gap-4 mb-4">
         {/* USDA Benchmark */}
         <div className={`border rounded-lg p-4 ${usda && !usda.not_found ? 'bg-blue-50 border-blue-200' : 'bg-white'}`}>
           <p className="text-xs text-stone-400 uppercase mb-2">USDA Benchmark (Boston Terminal)</p>
@@ -163,35 +176,60 @@ export default function CatalogDetailPage() {
                 <span className="text-xs text-stone-400">mostly</span>
                 <span className="text-sm font-mono text-stone-500">${usda.low.toFixed(2)} - ${usda.high.toFixed(2)}</span>
               </div>
-              <p className="text-[10px] text-stone-400 mb-2">Report: {usda.report_date} | {usda.commodity}</p>
-              <Button size="sm" variant="outline" onClick={useUSDAPrice} disabled={saving}>
-                Use USDA price (${usda.mostly.toFixed(2)}/stem)
-              </Button>
+              <p className="text-[10px] text-stone-400">Report: {usda.report_date} | {usda.commodity}</p>
             </>
           )}
         </div>
 
-        {/* Manual Cost Entry */}
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-xs text-stone-400 uppercase mb-2">Set Manual Cost</p>
-          <div className="flex items-center gap-2">
-            <span className="text-stone-500">$</span>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-              value={manualCost}
-              onChange={(e) => setManualCost(e.target.value)}
-              className="w-24 h-8 text-sm font-mono"
-            />
-            <span className="text-sm text-stone-400">/stem</span>
-            <Button size="sm" onClick={saveManualCost} disabled={saving || !manualCost}>
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
-          <p className="text-[10px] text-stone-400 mt-2">Use this when no invoice data exists (foliage, supplies)</p>
+        {/* FiftyFlowers Benchmark */}
+        <div className={`border rounded-lg p-4 ${ff && !ff.not_found ? 'bg-purple-50 border-purple-200' : 'bg-white'}`}>
+          <p className="text-xs text-stone-400 uppercase mb-2">FiftyFlowers.com (Retail)</p>
+          {ff === null ? (
+            <p className="text-sm text-stone-400">Loading...</p>
+          ) : ff.not_found ? (
+            <p className="text-sm text-stone-400">No FiftyFlowers data. Run scrape from Catalog page.</p>
+          ) : (
+            <>
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="text-xl font-mono font-medium text-purple-700">${ff.avg_per_stem.toFixed(2)}</span>
+                <span className="text-xs text-stone-400">avg/stem</span>
+              </div>
+              <p className="text-sm font-mono text-stone-500">${ff.min_per_stem.toFixed(2)} - ${ff.max_per_stem.toFixed(2)} range</p>
+              <p className="text-[10px] text-stone-400 mt-1">{ff.count} products | Retail pricing (wholesale is ~40-60% less)</p>
+            </>
+          )}
         </div>
+
+      </div>
+
+      {/* Manual Cost Entry */}
+      <div className="bg-white border rounded-lg p-4 mb-8">
+        <p className="text-xs text-stone-400 uppercase mb-2">Set Manual Cost</p>
+        <div className="flex items-center gap-2">
+          <span className="text-stone-500">$</span>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            value={manualCost}
+            onChange={(e) => setManualCost(e.target.value)}
+            className="w-24 h-8 text-sm font-mono"
+          />
+          <span className="text-sm text-stone-400">/stem</span>
+          <Button size="sm" onClick={saveManualCost} disabled={saving || !manualCost}>
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
+          {usda && !usda.not_found && (
+            <>
+              <span className="text-stone-300 mx-2">|</span>
+              <Button size="sm" variant="outline" onClick={useUSDAPrice} disabled={saving}>
+                Use USDA ${usda.mostly.toFixed(2)}
+              </Button>
+            </>
+          )}
+        </div>
+        <p className="text-[10px] text-stone-400 mt-2">Use this when no invoice data exists (foliage, supplies)</p>
       </div>
 
       {/* Used In Recipes */}
