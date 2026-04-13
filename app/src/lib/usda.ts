@@ -44,7 +44,11 @@ const USDA_TO_CATALOG: Record<string, string> = {
   'protea': 'protea',
   'ranunculus': 'ranunculus',
   'rose hybrid tea': 'standard roses',
+  'rose  hybrid tea': 'standard roses',
   'rose spray': 'spray roses',
+  'pompons': 'button poms',
+  'calla (zantedeschia)': 'calla lilies',
+  'carnations miniature': 'mini carnations',
   'snapdragon': 'snapdragons',
   'solidago': 'solidago',
   'statice': 'statice',
@@ -60,8 +64,8 @@ const USDA_TO_CATALOG: Record<string, string> = {
 /**
  * Fetch and parse the latest USDA Boston Terminal Market report.
  */
-export async function fetchUSDAReport(): Promise<{ report_date: string; prices: USDAPrice[] }> {
-  const url = 'https://www.ams.usda.gov/mnreports/bh_fv201.txt';
+export async function fetchUSDAReport(url?: string): Promise<{ report_date: string; prices: USDAPrice[] }> {
+  url = url || 'https://www.ams.usda.gov/mnreports/bh_fv201.txt';
   const response = await fetch(url, { cache: 'no-store' });
   if (!response.ok) throw new Error(`USDA fetch failed: ${response.status}`);
 
@@ -72,9 +76,10 @@ export async function fetchUSDAReport(): Promise<{ report_date: string; prices: 
 function parseUSDAReport(text: string): { report_date: string; prices: USDAPrice[] } {
   const prices: USDAPrice[] = [];
 
-  // Extract report date from first line
+  // Extract report date from header
   // "BOSTON Ornamental Terminal Prices as of 26-DEC-2023"
-  const dateMatch = text.match(/as of (\d{2}-[A-Z]{3}-\d{4})/);
+  // "MIAMI Ornamental Shipping Point Prices as of 13-MAY-2024"
+  const dateMatch = text.match(/as of (\d{1,2}-[A-Z]{3}-\d{4})/);
   const report_date = dateMatch ? parseUSDADate(dateMatch[1]) : new Date().toISOString().split('T')[0];
 
   // Split into commodity sections (each starts with ---)
@@ -84,10 +89,12 @@ function parseUSDAReport(text: string): { report_date: string; prices: USDAPrice
     const lines = section.split('\n');
     // First line has commodity name and market condition
     // "ALSTROEMERIA: MARKET STEADY. bunched 10s CB Assorted Colors long 8.50 EC"
-    const headerMatch = lines[0].match(/^([A-Z][A-Z\s,()\/]+?):\s*MARKET\s+(\w+[\s\w]*)\./);
+    const headerMatch = lines[0].match(/^([A-Z][A-Z\s,()\/\-]+?):\s*(?:SUPPLY\s+\w+\.\s*DEMAND\s+\w+\.\s*)?MARKET\s+(\w+[\s\w]*)\./);
     if (!headerMatch) continue;
 
-    const rawCommodity = headerMatch[1].trim().toLowerCase();
+    let rawCommodity = headerMatch[1].trim().toLowerCase();
+    // Normalize: "rose, hybrid tea" -> "rose hybrid tea"
+    rawCommodity = rawCommodity.replace(/,\s*/g, ' ');
     const marketCondition = headerMatch[2].trim();
     const catalogType = USDA_TO_CATALOG[rawCommodity] || null;
 
@@ -107,13 +114,13 @@ function parseUSDAReport(text: string): { report_date: string; prices: USDAPrice
 
       // Find origin codes and prices
       // Pattern: ORIGIN_CODE [variety info] [grade] PRICE[-PRICE] [mostly PRICE]
-      const pricePattern = /\b([A-Z]{2})\b\s+(?:([A-Za-z\s]+?)\s+)?(?:(exlong|long|med|short|40cm|50cm|60cm)\s+)?(\d+\.\d{2})(?:\s*-\s*(\d+\.\d{2}))?(?:\s+mostly\s+(\d+\.\d{2}))?/g;
+      const pricePattern = /(?:\b([A-Z]{2})\b\s+)?(?:([A-Za-z\s]+?)\s+)?(?:(exlong|long|med|short|\d+cm)\s+)?(\d*\.\d{2})(?:\s*[-–]\s*(\d*\.\d{2}))?(?:[,]?\s*mostly\s*(\d*\.\d{2}))?/g;
 
       let priceMatch;
       while ((priceMatch = pricePattern.exec(segment)) !== null) {
-        const origin = priceMatch[1];
-        // Skip if it's not a real origin code
-        if (!isOriginCode(origin)) continue;
+        const origin = priceMatch[1] || '';
+        // Skip if origin is provided but not a real code
+        if (origin && !isOriginCode(origin)) continue;
 
         const variety = (priceMatch[2] || '').trim();
         const grade = priceMatch[3] || '';
