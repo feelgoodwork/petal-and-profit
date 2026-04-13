@@ -3,6 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -30,6 +38,12 @@ interface CostSummary {
   missing_ingredients: number;
 }
 
+interface CatalogEntry {
+  id: number;
+  canonical_name: string;
+  category: string;
+}
+
 interface RecipeDetail {
   id: number;
   name: string;
@@ -43,12 +57,47 @@ interface RecipeDetail {
 export default function RecipeDetailPage() {
   const { id } = useParams();
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
+  const [catalog, setCatalog] = useState<CatalogEntry[]>([]);
+  const [editIng, setEditIng] = useState<Ingredient | null>(null);
+  const [addingNew, setAddingNew] = useState(false);
+
+  function fetchRecipe() {
+    fetch(`/api/recipes/${id}`).then(r => r.json()).then(setRecipe);
+  }
 
   useEffect(() => {
-    fetch(`/api/recipes/${id}`)
-      .then(r => r.json())
-      .then(setRecipe);
+    fetchRecipe();
+    fetch('/api/catalog').then(r => r.json()).then(setCatalog);
   }, [id]);
+
+  async function updateIngredient(ingredientId: number, updates: Record<string, unknown>) {
+    await fetch(`/api/recipes/${id}/ingredients`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ingredient_id: ingredientId, ...updates }),
+    });
+    fetchRecipe();
+  }
+
+  async function addIngredient(data: Record<string, unknown>) {
+    await fetch(`/api/recipes/${id}/ingredients`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    fetchRecipe();
+    setAddingNew(false);
+  }
+
+  async function removeIngredient(ingredientId: number) {
+    if (!confirm('Remove this ingredient?')) return;
+    await fetch(`/api/recipes/${id}/ingredients`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ingredient_id: ingredientId }),
+    });
+    fetchRecipe();
+  }
 
   if (!recipe) return <div className="p-8 text-stone-400">Loading...</div>;
 
@@ -75,9 +124,7 @@ export default function RecipeDetailPage() {
           <h1 className="text-2xl font-semibold text-stone-900">{recipe.name}</h1>
           <Badge variant="outline">{recipe.category_name}</Badge>
         </div>
-        {recipe.container && (
-          <p className="text-sm text-stone-500 mt-1">Container: {recipe.container}</p>
-        )}
+        {recipe.container && <p className="text-sm text-stone-500 mt-1">Container: {recipe.container}</p>}
       </div>
 
       {/* Cost Summary */}
@@ -92,7 +139,7 @@ export default function RecipeDetailPage() {
             {cs.total_cost > 0 ? `$${cs.total_cost.toFixed(2)}` : '-'}
           </p>
           {cs.missing_ingredients > 0 && (
-            <p className="text-[10px] text-amber-600 mt-1">{cs.missing_ingredients} ingredients not costed</p>
+            <p className="text-[10px] text-amber-600 mt-1">{cs.missing_ingredients} not costed</p>
           )}
         </div>
         <div className="bg-white border rounded-lg p-4">
@@ -109,106 +156,275 @@ export default function RecipeDetailPage() {
         </div>
       </div>
 
-      {/* Flowers & Fillers */}
-      {flowers.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wider mb-2">Flowers & Fillers</h2>
-          <div className="border rounded-lg bg-white">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ingredient</TableHead>
-                  <TableHead>Matched To</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Cost/Stem</TableHead>
-                  <TableHead className="text-right">Line Cost</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {flowers.map((ing) => {
-                  const lineCost = ing.avg_cost != null && ing.cost_count > 0
-                    ? (ing.quantity || 1) * ing.avg_cost : null;
-                  return (
-                    <TableRow key={ing.id} className={ing.cost_count === 0 ? 'bg-amber-50/50' : ''}>
-                      <TableCell className="font-medium">{ing.ingredient_name}</TableCell>
-                      <TableCell>
-                        {ing.canonical_name ? (
-                          <Link href={`/catalog/${ing.flower_id}`} className="text-emerald-700 hover:underline text-sm capitalize">
-                            {ing.canonical_name}
-                          </Link>
-                        ) : (
-                          <span className="text-stone-300 text-sm">unmatched</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">{ing.quantity ?? '-'}</TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {ing.avg_cost != null && ing.cost_count > 0 ? (
-                          <span title={`${ing.cost_count} price points, range $${ing.min_cost?.toFixed(2)}-$${ing.max_cost?.toFixed(2)}`}>
-                            ${ing.avg_cost.toFixed(2)}
-                          </span>
-                        ) : (
-                          <span className="text-stone-300">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm font-medium">
-                        {lineCost != null ? `$${lineCost.toFixed(2)}` : (
-                          <span className="text-amber-500 text-xs">no cost data</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {/* Total row */}
-                <TableRow className="border-t-2">
-                  <TableCell colSpan={4} className="text-right font-medium text-stone-700">Total Flower Cost</TableCell>
-                  <TableCell className="text-right font-mono font-medium text-stone-900">
-                    {cs.total_cost > 0 ? `$${cs.total_cost.toFixed(2)}` : '-'}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+      {/* Flowers */}
+      <IngredientTable
+        title="Flowers & Fillers"
+        ingredients={flowers}
+        catalog={catalog}
+        onEdit={setEditIng}
+        onRemove={removeIngredient}
+      />
+
+      {/* Foliage */}
+      <IngredientTable
+        title="Foliage & Greenery"
+        ingredients={foliage}
+        catalog={catalog}
+        onEdit={setEditIng}
+        onRemove={removeIngredient}
+        isFoliage
+      />
+
+      {/* Total row */}
+      {cs.total_cost > 0 && (
+        <div className="flex justify-end mb-6">
+          <div className="bg-stone-100 rounded-lg px-6 py-3">
+            <span className="text-sm text-stone-600 mr-4">Total Flower Cost:</span>
+            <span className="text-lg font-mono font-medium">${cs.total_cost.toFixed(2)}</span>
           </div>
         </div>
       )}
 
-      {/* Foliage */}
-      {foliage.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wider mb-2">Foliage & Greenery</h2>
-          <div className="border rounded-lg bg-white">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ingredient</TableHead>
-                  <TableHead>Matched To</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Cost/Stem</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {foliage.map((ing) => (
-                  <TableRow key={ing.id}>
-                    <TableCell className="text-stone-600">{ing.ingredient_name}</TableCell>
-                    <TableCell>
-                      {ing.canonical_name ? (
-                        <Link href={`/catalog/${ing.flower_id}`} className="text-emerald-700 hover:underline text-sm capitalize">
-                          {ing.canonical_name}
-                        </Link>
-                      ) : (
-                        <span className="text-stone-300 text-sm">unmatched</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right text-stone-400">{ing.quantity ?? '-'}</TableCell>
-                    <TableCell className="text-right font-mono text-sm text-stone-400">
-                      {ing.avg_cost != null && ing.cost_count > 0 ? `$${ing.avg_cost.toFixed(2)}` : '-'}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+      {/* Add Ingredient */}
+      <div className="mb-8">
+        <Button variant="outline" size="sm" onClick={() => setAddingNew(true)}>
+          + Add Ingredient
+        </Button>
+      </div>
+
+      {/* Edit Dialog */}
+      {editIng && (
+        <EditIngredientDialog
+          ingredient={editIng}
+          catalog={catalog}
+          onSave={async (updates) => {
+            await updateIngredient(editIng.id, updates);
+            setEditIng(null);
+          }}
+          onClose={() => setEditIng(null)}
+        />
+      )}
+
+      {/* Add Dialog */}
+      {addingNew && (
+        <AddIngredientDialog
+          catalog={catalog}
+          onSave={addIngredient}
+          onClose={() => setAddingNew(false)}
+        />
       )}
     </div>
+  );
+}
+
+function IngredientTable({
+  title, ingredients, catalog, onEdit, onRemove, isFoliage,
+}: {
+  title: string;
+  ingredients: Ingredient[];
+  catalog: CatalogEntry[];
+  onEdit: (i: Ingredient) => void;
+  onRemove: (id: number) => void;
+  isFoliage?: boolean;
+}) {
+  if (ingredients.length === 0) return null;
+
+  return (
+    <div className="mb-6">
+      <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wider mb-2">{title}</h2>
+      <div className="border rounded-lg bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Ingredient</TableHead>
+              <TableHead>Mapped To</TableHead>
+              <TableHead className="text-right">Qty</TableHead>
+              {!isFoliage && <TableHead className="text-right">Cost/Stem</TableHead>}
+              {!isFoliage && <TableHead className="text-right">Line Cost</TableHead>}
+              <TableHead className="w-24"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {ingredients.map((ing) => {
+              const lineCost = ing.avg_cost != null && Number(ing.cost_count) > 0
+                ? (ing.quantity || 1) * Number(ing.avg_cost) : null;
+              return (
+                <TableRow key={ing.id} className={Number(ing.cost_count) === 0 && !isFoliage ? 'bg-amber-50/50' : ''}>
+                  <TableCell className="font-medium">{ing.ingredient_name}</TableCell>
+                  <TableCell>
+                    {ing.canonical_name ? (
+                      <Link href={`/catalog/${ing.flower_id}`} className="text-emerald-700 hover:underline text-sm capitalize">
+                        {ing.canonical_name}
+                      </Link>
+                    ) : (
+                      <span className="text-stone-300 text-sm">unmatched</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">{ing.quantity ?? '-'}</TableCell>
+                  {!isFoliage && (
+                    <TableCell className="text-right font-mono text-sm">
+                      {ing.avg_cost != null && Number(ing.cost_count) > 0
+                        ? `$${Number(ing.avg_cost).toFixed(2)}` : <span className="text-amber-500 text-xs">no data</span>}
+                    </TableCell>
+                  )}
+                  {!isFoliage && (
+                    <TableCell className="text-right font-mono text-sm font-medium">
+                      {lineCost != null ? `$${lineCost.toFixed(2)}` : '-'}
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => onEdit(ing)}>Edit</Button>
+                      <Button size="sm" variant="ghost" className="h-6 text-xs text-red-500 hover:text-red-700" onClick={() => onRemove(ing.id)}>X</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function EditIngredientDialog({
+  ingredient, catalog, onSave, onClose,
+}: {
+  ingredient: Ingredient;
+  catalog: CatalogEntry[];
+  onSave: (updates: Record<string, unknown>) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(ingredient.ingredient_name);
+  const [qty, setQty] = useState(String(ingredient.quantity ?? ''));
+  const [flowerId, setFlowerId] = useState(String(ingredient.flower_id ?? ''));
+  const [isFoliage, setIsFoliage] = useState(!!ingredient.is_foliage);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    const updates: Record<string, unknown> = {};
+    if (name !== ingredient.ingredient_name) updates.ingredient_name = name;
+    if (qty !== String(ingredient.quantity ?? '')) updates.quantity = parseFloat(qty) || null;
+    if (flowerId !== String(ingredient.flower_id ?? '')) updates.flower_id = flowerId ? parseInt(flowerId) : null;
+    if (isFoliage !== !!ingredient.is_foliage) updates.is_foliage = isFoliage;
+    await onSave(updates);
+    setSaving(false);
+  }
+
+  return (
+    <Dialog open onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Edit Ingredient</DialogTitle></DialogHeader>
+        <div className="space-y-4 pt-2">
+          <div>
+            <label className="text-xs text-stone-500 uppercase block mb-1">Ingredient Name</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-stone-500 uppercase block mb-1">Quantity</label>
+              <Input type="number" step="0.5" value={qty} onChange={(e) => setQty(e.target.value)} />
+            </div>
+            <div className="flex items-end gap-2 pb-1">
+              <label className="text-sm text-stone-600">
+                <input type="checkbox" checked={isFoliage} onChange={(e) => setIsFoliage(e.target.checked)} className="mr-2" />
+                Foliage/Greenery
+              </label>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-stone-500 uppercase block mb-1">Map to Catalog Entry</label>
+            <Select value={flowerId} onValueChange={(v) => setFlowerId(v ?? '')}>
+              <SelectTrigger><SelectValue placeholder="Select product type..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">-- None --</SelectItem>
+                {catalog.filter(c => c.category === 'flower').map(c => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.canonical_name}</SelectItem>
+                ))}
+                {catalog.filter(c => c.category === 'foliage').map(c => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.canonical_name} (foliage)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AddIngredientDialog({
+  catalog, onSave, onClose,
+}: {
+  catalog: CatalogEntry[];
+  onSave: (data: Record<string, unknown>) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState('');
+  const [qty, setQty] = useState('');
+  const [flowerId, setFlowerId] = useState('');
+  const [isFoliage, setIsFoliage] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    if (!name) return;
+    setSaving(true);
+    await onSave({
+      ingredient_name: name,
+      quantity: parseFloat(qty) || null,
+      flower_id: flowerId ? parseInt(flowerId) : null,
+      is_foliage: isFoliage,
+    });
+    setSaving(false);
+  }
+
+  return (
+    <Dialog open onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Add Ingredient</DialogTitle></DialogHeader>
+        <div className="space-y-4 pt-2">
+          <div>
+            <label className="text-xs text-stone-500 uppercase block mb-1">Ingredient Name</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. hot pink spray roses" autoFocus />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-stone-500 uppercase block mb-1">Quantity</label>
+              <Input type="number" step="0.5" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="3" />
+            </div>
+            <div className="flex items-end gap-2 pb-1">
+              <label className="text-sm text-stone-600">
+                <input type="checkbox" checked={isFoliage} onChange={(e) => setIsFoliage(e.target.checked)} className="mr-2" />
+                Foliage/Greenery
+              </label>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-stone-500 uppercase block mb-1">Map to Catalog Entry</label>
+            <Select value={flowerId} onValueChange={(v) => setFlowerId(v ?? '')}>
+              <SelectTrigger><SelectValue placeholder="Select product type..." /></SelectTrigger>
+              <SelectContent>
+                {catalog.filter(c => c.category === 'flower').map(c => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.canonical_name}</SelectItem>
+                ))}
+                {catalog.filter(c => c.category === 'foliage').map(c => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.canonical_name} (foliage)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSave} disabled={saving || !name}>{saving ? 'Adding...' : 'Add Ingredient'}</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
