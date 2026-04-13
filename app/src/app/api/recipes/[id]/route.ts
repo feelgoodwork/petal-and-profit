@@ -26,19 +26,24 @@ export async function GET(
         (SELECT AVG(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id) as avg_cost,
         (SELECT MIN(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id) as min_cost,
         (SELECT MAX(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id) as max_cost,
-        (SELECT COUNT(*) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id) as cost_count
+        (SELECT COUNT(*) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id) as cost_count,
+        (SELECT ic.unit_cost FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id ORDER BY ic.invoice_date DESC NULLS LAST, ic.id DESC LIMIT 1) as latest_cost,
+        (SELECT ic.invoice_date FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id ORDER BY ic.invoice_date DESC NULLS LAST, ic.id DESC LIMIT 1) as latest_cost_date
       FROM recipe_ingredients ri
       LEFT JOIN flower_catalog fc ON ri.flower_id = fc.id
       WHERE ri.recipe_id = ${numId}
       ORDER BY ri.is_foliage, ri.id
     `;
 
-    let totalCost = 0;
+    let totalCostAvg = 0;
+    let totalCostLatest = 0;
     let costedIngredients = 0;
     let missingIngredients = 0;
     for (const ing of ingredients) {
       if (ing.avg_cost != null && Number(ing.cost_count) > 0) {
-        totalCost += (ing.quantity || 1) * Number(ing.avg_cost);
+        const qty = Number(ing.quantity) || 1;
+        totalCostAvg += qty * Number(ing.avg_cost);
+        totalCostLatest += qty * (ing.latest_cost != null ? Number(ing.latest_cost) : Number(ing.avg_cost));
         costedIngredients++;
       } else {
         missingIngredients++;
@@ -46,16 +51,17 @@ export async function GET(
     }
 
     const sellPrice = Number(recipe.sell_price);
-    const grossMargin = sellPrice - totalCost;
-    const marginPct = totalCost > 0 ? (grossMargin / sellPrice) * 100 : null;
 
     return Response.json({
       ...recipe,
       ingredients,
       cost_summary: {
-        total_cost: totalCost,
-        gross_margin: grossMargin,
-        margin_pct: marginPct,
+        total_cost: totalCostAvg,
+        total_cost_latest: totalCostLatest,
+        gross_margin: sellPrice - totalCostAvg,
+        gross_margin_latest: sellPrice - totalCostLatest,
+        margin_pct: totalCostAvg > 0 ? ((sellPrice - totalCostAvg) / sellPrice) * 100 : null,
+        margin_pct_latest: totalCostLatest > 0 ? ((sellPrice - totalCostLatest) / sellPrice) * 100 : null,
         costed_ingredients: costedIngredients,
         missing_ingredients: missingIngredients,
       },

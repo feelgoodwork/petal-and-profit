@@ -28,12 +28,17 @@ interface Ingredient {
   min_cost: number | null;
   max_cost: number | null;
   cost_count: number;
+  latest_cost: number | null;
+  latest_cost_date: string | null;
 }
 
 interface CostSummary {
   total_cost: number;
+  total_cost_latest: number;
   gross_margin: number;
+  gross_margin_latest: number;
   margin_pct: number | null;
+  margin_pct_latest: number | null;
   costed_ingredients: number;
   missing_ingredients: number;
 }
@@ -127,34 +132,47 @@ export default function RecipeDetailPage() {
         {recipe.container && <p className="text-sm text-stone-500 mt-1">Container: {recipe.container}</p>}
       </div>
 
-      {/* Cost Summary */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-xs text-stone-400 uppercase">Sell Price</p>
-          <p className="text-2xl font-mono font-medium text-stone-900">${recipe.sell_price.toFixed(2)}</p>
-        </div>
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-xs text-stone-400 uppercase">Flower Cost</p>
-          <p className="text-2xl font-mono font-medium text-stone-900">
-            {cs.total_cost > 0 ? `$${cs.total_cost.toFixed(2)}` : '-'}
-          </p>
-          {cs.missing_ingredients > 0 && (
-            <p className="text-[10px] text-amber-600 mt-1">{cs.missing_ingredients} not costed</p>
-          )}
-        </div>
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-xs text-stone-400 uppercase">Gross Margin</p>
-          <p className={`text-2xl font-mono font-medium ${marginColor(cs.margin_pct)}`}>
-            {cs.total_cost > 0 ? `$${cs.gross_margin.toFixed(2)}` : '-'}
-          </p>
-        </div>
-        <div className={`border rounded-lg p-4 ${cs.margin_pct && cs.margin_pct >= 50 ? 'bg-emerald-50 border-emerald-200' : cs.margin_pct ? 'bg-amber-50 border-amber-200' : 'bg-white'}`}>
-          <p className="text-xs text-stone-400 uppercase">Margin %</p>
-          <p className={`text-2xl font-mono font-medium ${marginColor(cs.margin_pct)}`}>
-            {cs.margin_pct != null ? `${cs.margin_pct.toFixed(1)}%` : '-'}
-          </p>
+      {/* Cost Summary - Latest (what it costs today) */}
+      <div className="mb-2">
+        <p className="text-xs text-stone-400 uppercase tracking-wider mb-2">Cost Today (most recent vendor prices)</p>
+        <div className="grid grid-cols-4 gap-4">
+          <div className="bg-white border rounded-lg p-4">
+            <p className="text-xs text-stone-400 uppercase">Sell Price</p>
+            <p className="text-2xl font-mono font-medium text-stone-900">${recipe.sell_price.toFixed(2)}</p>
+          </div>
+          <div className="bg-white border rounded-lg p-4">
+            <p className="text-xs text-stone-400 uppercase">Flower Cost</p>
+            <p className="text-2xl font-mono font-medium text-stone-900">
+              {cs.total_cost_latest > 0 ? `$${cs.total_cost_latest.toFixed(2)}` : '-'}
+            </p>
+            {cs.missing_ingredients > 0 && (
+              <p className="text-[10px] text-amber-600 mt-1">{cs.missing_ingredients} not costed</p>
+            )}
+          </div>
+          <div className="bg-white border rounded-lg p-4">
+            <p className="text-xs text-stone-400 uppercase">Margin</p>
+            <p className={`text-2xl font-mono font-medium ${marginColor(cs.margin_pct_latest)}`}>
+              {cs.total_cost_latest > 0 ? `$${cs.gross_margin_latest.toFixed(2)}` : '-'}
+            </p>
+          </div>
+          <div className={`border rounded-lg p-4 ${cs.margin_pct_latest && cs.margin_pct_latest >= 50 ? 'bg-emerald-50 border-emerald-200' : cs.margin_pct_latest ? 'bg-amber-50 border-amber-200' : 'bg-white'}`}>
+            <p className="text-xs text-stone-400 uppercase">Margin %</p>
+            <p className={`text-2xl font-mono font-medium ${marginColor(cs.margin_pct_latest)}`}>
+              {cs.margin_pct_latest != null ? `${cs.margin_pct_latest.toFixed(1)}%` : '-'}
+            </p>
+          </div>
         </div>
       </div>
+      {/* Historical average comparison */}
+      {cs.total_cost > 0 && cs.total_cost !== cs.total_cost_latest && (
+        <p className="text-xs text-stone-400 mb-8">
+          Historical avg: ${cs.total_cost.toFixed(2)} cost / ${cs.gross_margin.toFixed(2)} margin / {cs.margin_pct?.toFixed(1)}%
+          {cs.total_cost_latest > cs.total_cost
+            ? <span className="text-red-500 ml-1">(costs rising)</span>
+            : <span className="text-emerald-600 ml-1">(costs falling)</span>}
+        </p>
+      )}
+      {cs.total_cost === cs.total_cost_latest && <div className="mb-8" />}
 
       {/* Flowers */}
       <IngredientTable
@@ -239,15 +257,18 @@ function IngredientTable({
               <TableHead>Ingredient</TableHead>
               <TableHead>Mapped To</TableHead>
               <TableHead className="text-right">Qty</TableHead>
-              {!isFoliage && <TableHead className="text-right">Cost/Stem</TableHead>}
+              {!isFoliage && <TableHead className="text-right">Latest $/Stem</TableHead>}
+              {!isFoliage && <TableHead className="text-right">Avg $/Stem</TableHead>}
               {!isFoliage && <TableHead className="text-right">Line Cost</TableHead>}
               <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {ingredients.map((ing) => {
-              const lineCost = ing.avg_cost != null && Number(ing.cost_count) > 0
-                ? (ing.quantity || 1) * Number(ing.avg_cost) : null;
+              const latestCost = ing.latest_cost != null ? Number(ing.latest_cost) : null;
+              const avgCostVal = ing.avg_cost != null && Number(ing.cost_count) > 0 ? Number(ing.avg_cost) : null;
+              const costForLine = latestCost ?? avgCostVal;
+              const lineCost = costForLine != null ? (Number(ing.quantity) || 1) * costForLine : null;
               return (
                 <TableRow key={ing.id} className={Number(ing.cost_count) === 0 && !isFoliage ? 'bg-amber-50/50' : ''}>
                   <TableCell className="font-medium">{ing.ingredient_name}</TableCell>
@@ -263,8 +284,16 @@ function IngredientTable({
                   <TableCell className="text-right">{ing.quantity ?? '-'}</TableCell>
                   {!isFoliage && (
                     <TableCell className="text-right font-mono text-sm">
-                      {ing.avg_cost != null && Number(ing.cost_count) > 0
-                        ? `$${Number(ing.avg_cost).toFixed(2)}` : <span className="text-amber-500 text-xs">no data</span>}
+                      {latestCost != null ? (
+                        <span title={ing.latest_cost_date ? `From ${ing.latest_cost_date}` : ''}>
+                          ${latestCost.toFixed(2)}
+                        </span>
+                      ) : <span className="text-amber-500 text-xs">no data</span>}
+                    </TableCell>
+                  )}
+                  {!isFoliage && (
+                    <TableCell className="text-right font-mono text-sm text-stone-400">
+                      {avgCostVal != null ? `$${avgCostVal.toFixed(2)}` : '-'}
                     </TableCell>
                   )}
                   {!isFoliage && (
