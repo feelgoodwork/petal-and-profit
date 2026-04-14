@@ -19,9 +19,10 @@ export async function POST(
     const source = body.source || 'manual';
     const notes = body.notes || (source === 'usda' ? 'USDA benchmark' : 'Manual entry');
 
+    const today = new Date().toISOString().split('T')[0];
     await sql`
-      INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, notes, invoice_date)
-      VALUES (${numId}, NULL, ${unitCost}, 'stem', ${notes}, ${new Date().toISOString().split('T')[0]})
+      INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, notes, invoice_date, parsed_date, is_current)
+      VALUES (${numId}, NULL, ${unitCost}, 'stem', ${notes}, ${today}, ${today}::date, true)
     `;
 
     return Response.json({ success: true });

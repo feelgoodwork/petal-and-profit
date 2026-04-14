@@ -97,8 +97,8 @@ export async function autoMatchLineItems(): Promise<{ matched: number; unmatched
     const costValue = (item.cost_per_stem ?? item.unit_price) as number | null;
     if (costValue != null && Number(costValue) > 0) {
       await sql`
-        INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date, stem_size_cm)
-        VALUES (${flowerId}, ${item.vendor_id}, ${Number(costValue)}, 'stem', ${item.id}, ${item.invoice_date}, ${stemSizeCm})
+        INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date, stem_size_cm, is_current)
+        VALUES (${flowerId}, ${item.vendor_id}, ${Number(costValue)}, 'stem', ${item.id}, ${item.invoice_date}, ${stemSizeCm}, true)
       `;
     }
     matched++;

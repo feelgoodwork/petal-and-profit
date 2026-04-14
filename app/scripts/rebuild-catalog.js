@@ -343,7 +343,21 @@ async function main() {
     aliasRows.push([flowerId, item.description, item.vendor_id, 0.9]);
     const costValue = item.cost_per_stem ?? item.unit_price;
     if (costValue != null && Number(costValue) > 0) {
-      costRows.push([flowerId, item.vendor_id, Number(costValue), 'stem', item.id, item.invoice_date, stemSize]);
+      // Parse date for parsed_date column
+      let parsedDate = null;
+      const dateStr = item.invoice_date;
+      if (dateStr) {
+        if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) parsedDate = dateStr.substring(0, 10);
+        else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+          const [m, d, y] = dateStr.split('/');
+          parsedDate = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+        } else if (/^\d{1,2}\/\d{1,2}\/\d{2}$/.test(dateStr)) {
+          const [m, d, y] = dateStr.split('/');
+          const fullYear = Number(y) > 50 ? `19${y}` : `20${y}`;
+          parsedDate = `${fullYear}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+        }
+      }
+      costRows.push([flowerId, item.vendor_id, Number(costValue), 'stem', item.id, item.invoice_date, stemSize, parsedDate]);
     }
     liMatched++;
   }
@@ -370,18 +384,36 @@ async function main() {
     const batch = costRows.slice(i, i + batchSize);
     const values = [];
     const placeholders = batch.map((_, j) => {
-      const o = j * 7;
+      const o = j * 8;
       values.push(...batch[j]);
-      return `($${o+1},$${o+2},$${o+3},$${o+4},$${o+5},$${o+6},$${o+7})`;
+      return `($${o+1},$${o+2},$${o+3},$${o+4},$${o+5},$${o+6},$${o+7},$${o+8})`;
     });
     await client.query(
-      `INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date, stem_size_cm) VALUES ${placeholders.join(',')}`,
+      `INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date, stem_size_cm, parsed_date) VALUES ${placeholders.join(',')}`,
       values
     );
   }
 
   console.log(`  Line items matched: ${liMatched}, unmatched: ${liUnmatched}`);
   console.log(`  Aliases: ${aliasRows.length}, cost records: ${costRows.length}`);
+
+  // ---- Set is_current flag (2024+ rule) ----
+  console.log('\n[4/3] Setting cost currency (2024+ rule)...');
+  await client.query('ALTER TABLE ingredient_costs ADD COLUMN IF NOT EXISTS is_current BOOLEAN DEFAULT false');
+  await client.query('UPDATE ingredient_costs SET is_current = false');
+  const { rowCount: marked2024 } = await client.query("UPDATE ingredient_costs SET is_current = true WHERE parsed_date >= '2024-01-01'");
+  const { rowCount: markedFallback } = await client.query(`
+    UPDATE ingredient_costs SET is_current = true
+    WHERE id IN (
+      SELECT DISTINCT ON (flower_id) id
+      FROM ingredient_costs
+      WHERE flower_id NOT IN (
+        SELECT DISTINCT flower_id FROM ingredient_costs WHERE parsed_date >= '2024-01-01'
+      )
+      ORDER BY flower_id, parsed_date DESC NULLS LAST, id DESC
+    )
+  `);
+  console.log(`  Current: ${marked2024} rows (2024+), ${markedFallback} fallback rows`);
 
   // ---- Summary ----
   const { rows: [stats] } = await client.query(`

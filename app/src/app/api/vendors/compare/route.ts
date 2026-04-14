@@ -19,7 +19,7 @@ export async function GET() {
       FROM ingredient_costs ic
       JOIN flower_catalog fc ON ic.flower_id = fc.id
       LEFT JOIN vendors v ON ic.vendor_id = v.id
-      WHERE ic.unit_cost > 0
+      WHERE ic.unit_cost > 0 AND ic.is_current = true
       GROUP BY fc.canonical_name, fc.category, v.name
       ORDER BY fc.canonical_name, AVG(ic.unit_cost)
     `;

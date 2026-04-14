@@ -145,7 +145,7 @@ ${descriptions}`
 
             const costValue = li.cost_per_stem ?? li.unit_price;
             if (costValue != null && Number(costValue) > 0) {
-              await sql`INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date) VALUES (${catalogEntry.id}, ${li.vendor_id}, ${costValue}, 'stem', ${li.id}, ${li.invoice_date})`;
+              await sql`INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date, is_current) VALUES (${catalogEntry.id}, ${li.vendor_id}, ${costValue}, 'stem', ${li.id}, ${li.invoice_date}, true)`;
             }
           }
 

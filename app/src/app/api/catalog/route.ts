@@ -7,10 +7,10 @@ export async function GET() {
     const entries = await sql`
       SELECT fc.*,
         (SELECT COUNT(*) FROM flower_aliases WHERE flower_id = fc.id) as alias_count,
-        (SELECT AVG(unit_cost) FROM ingredient_costs WHERE flower_id = fc.id) as avg_cost,
-        (SELECT MIN(unit_cost) FROM ingredient_costs WHERE flower_id = fc.id) as min_cost,
-        (SELECT MAX(unit_cost) FROM ingredient_costs WHERE flower_id = fc.id) as max_cost,
-        (SELECT COUNT(*) FROM ingredient_costs WHERE flower_id = fc.id) as cost_count,
+        (SELECT AVG(unit_cost) FROM ingredient_costs WHERE is_current = true AND flower_id = fc.id) as avg_cost,
+        (SELECT MIN(unit_cost) FROM ingredient_costs WHERE is_current = true AND flower_id = fc.id) as min_cost,
+        (SELECT MAX(unit_cost) FROM ingredient_costs WHERE is_current = true AND flower_id = fc.id) as max_cost,
+        (SELECT COUNT(*) FROM ingredient_costs WHERE is_current = true AND flower_id = fc.id) as cost_count,
         CASE WHEN fc.category = 'foliage' THEN 'bunch' ELSE 'stem' END as price_unit,
         (SELECT MIN(wb.pp_price) FROM wholesale_benchmarks wb
          WHERE wb.catalog_type = fc.canonical_name

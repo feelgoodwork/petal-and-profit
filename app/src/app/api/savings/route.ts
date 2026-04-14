@@ -31,6 +31,7 @@ export async function GET() {
     const costRows = await sql`
       SELECT flower_id, AVG(unit_cost)::numeric as avg_cost
       FROM ingredient_costs
+      WHERE is_current = true
       GROUP BY flower_id
     `;
     const avgCostByFlower = new Map<number, number>();

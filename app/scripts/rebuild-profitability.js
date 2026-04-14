@@ -26,7 +26,7 @@ async function main() {
   console.log(`  ${recipes.length} recipes to process`);
 
   // Load all ingredient costs into memory to avoid per-recipe queries
-  const costs = await sql`SELECT flower_id, AVG(unit_cost) as avg_cost, COUNT(*) as cnt FROM ingredient_costs GROUP BY flower_id`;
+  const costs = await sql`SELECT flower_id, AVG(unit_cost) as avg_cost, COUNT(*) as cnt FROM ingredient_costs WHERE is_current = true GROUP BY flower_id`;
   const costMap = new Map(costs.map(c => [Number(c.flower_id), { avg: Number(c.avg_cost), cnt: Number(c.cnt) }]));
 
   // Load all recipe ingredients in one query

@@ -23,24 +23,12 @@ export async function GET(
 
     const ingredients = await sql`
       SELECT ri.*, fc.canonical_name, fc.base_type,
-        (SELECT AVG(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id) as avg_cost,
-        (SELECT MIN(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id) as min_cost,
-        (SELECT MAX(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id) as max_cost,
-        (SELECT COUNT(*) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id) as cost_count,
-        (SELECT ic.unit_cost FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id ORDER BY
-          CASE
-            WHEN ic.invoice_date ~ '^\d{4}-\d{2}-\d{2}' THEN ic.invoice_date::date
-            WHEN ic.invoice_date ~ '^\d{1,2}/\d{1,2}/\d{4}$' THEN TO_DATE(ic.invoice_date, 'MM/DD/YYYY')
-            WHEN ic.invoice_date ~ '^\d{1,2}/\d{1,2}/\d{2}$' THEN TO_DATE(ic.invoice_date, 'MM/DD/YY')
-            ELSE NULL
-          END DESC NULLS LAST, ic.id DESC LIMIT 1) as latest_cost,
-        (SELECT ic.invoice_date FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id ORDER BY
-          CASE
-            WHEN ic.invoice_date ~ '^\d{4}-\d{2}-\d{2}' THEN ic.invoice_date::date
-            WHEN ic.invoice_date ~ '^\d{1,2}/\d{1,2}/\d{4}$' THEN TO_DATE(ic.invoice_date, 'MM/DD/YYYY')
-            WHEN ic.invoice_date ~ '^\d{1,2}/\d{1,2}/\d{2}$' THEN TO_DATE(ic.invoice_date, 'MM/DD/YY')
-            ELSE NULL
-          END DESC NULLS LAST, ic.id DESC LIMIT 1) as latest_cost_date,
+        (SELECT AVG(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true) as avg_cost,
+        (SELECT MIN(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true) as min_cost,
+        (SELECT MAX(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true) as max_cost,
+        (SELECT COUNT(*) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true) as cost_count,
+        (SELECT ic.unit_cost FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true ORDER BY ic.parsed_date DESC NULLS LAST, ic.id DESC LIMIT 1) as latest_cost,
+        (SELECT ic.invoice_date FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true ORDER BY ic.parsed_date DESC NULLS LAST, ic.id DESC LIMIT 1) as latest_cost_date,
         (SELECT MIN(wb.pp_price) FROM wholesale_benchmarks wb
          WHERE wb.catalog_type = fc.canonical_name
             OR wb.catalog_type = COALESCE(fc.base_type, fc.canonical_name)

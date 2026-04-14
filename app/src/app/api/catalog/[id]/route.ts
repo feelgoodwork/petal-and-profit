@@ -35,15 +35,15 @@ export async function GET(
       SELECT ic.*, v.name as vendor_name
       FROM ingredient_costs ic
       LEFT JOIN vendors v ON ic.vendor_id = v.id
-      WHERE ic.flower_id = ${numId}
-      ORDER BY ic.invoice_date DESC
+      WHERE ic.flower_id = ${numId} AND ic.is_current = true
+      ORDER BY ic.parsed_date DESC NULLS LAST
     `;
 
     // Stem size breakdown (only for entries that have size data)
     const stemSizes = await sql`
       SELECT stem_size_cm, COUNT(*) as count, ROUND(AVG(unit_cost)::numeric, 2) as avg_cost
       FROM ingredient_costs
-      WHERE flower_id = ${numId} AND stem_size_cm IS NOT NULL
+      WHERE flower_id = ${numId} AND stem_size_cm IS NOT NULL AND is_current = true
       GROUP BY stem_size_cm ORDER BY stem_size_cm
     `;
 

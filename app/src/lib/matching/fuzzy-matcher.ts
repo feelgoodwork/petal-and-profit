@@ -86,6 +86,6 @@ export async function confirmMatch(lineItemId: number, flowerId: number, vendorI
 
   if (lineItem.unit_price != null) {
     const [receipt] = await sql`SELECT invoice_date FROM receipts WHERE id = ${lineItem.receipt_id}`;
-    await sql`INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date) VALUES (${flowerId}, ${vendorId}, ${lineItem.cost_per_stem ?? lineItem.unit_price}, 'stem', ${lineItemId}, ${receipt?.invoice_date})`;
+    await sql`INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date, is_current) VALUES (${flowerId}, ${vendorId}, ${lineItem.cost_per_stem ?? lineItem.unit_price}, 'stem', ${lineItemId}, ${receipt?.invoice_date}, true)`;
   }
 }

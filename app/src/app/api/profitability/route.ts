@@ -68,8 +68,8 @@ export async function POST() {
     for (const recipe of recipes) {
       const ingredients = await sql`
         SELECT ri.*,
-          (SELECT AVG(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id) as avg_cost,
-          (SELECT COUNT(*) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id) as cost_count
+          (SELECT AVG(ic.unit_cost) FROM ingredient_costs ic WHERE ic.is_current = true AND ic.flower_id = ri.flower_id) as avg_cost,
+          (SELECT COUNT(*) FROM ingredient_costs ic WHERE ic.is_current = true AND ic.flower_id = ri.flower_id) as cost_count
         FROM recipe_ingredients ri
         WHERE ri.recipe_id = ${recipe.id}
       ` as Row[];

@@ -73,7 +73,7 @@ export async function PUT(
           const costValue = item.cost_per_stem ?? item.unit_price;
           if (costValue != null && Number(costValue) > 0) {
             const [r] = await sql`SELECT invoice_date FROM receipts WHERE id = ${numId}`;
-            await sql`INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date) VALUES (${flowerId}, ${receipt.vendor_id}, ${costValue}, 'stem', ${itemId}, ${r?.invoice_date})`;
+            await sql`INSERT INTO ingredient_costs (flower_id, vendor_id, unit_cost, cost_per, source_line_item_id, invoice_date, is_current) VALUES (${flowerId}, ${receipt.vendor_id}, ${costValue}, 'stem', ${itemId}, ${r?.invoice_date}, true)`;
           }
         }
       }
