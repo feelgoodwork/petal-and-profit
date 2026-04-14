@@ -30,17 +30,22 @@ interface Ingredient {
   cost_count: number;
   latest_cost: number | null;
   latest_cost_date: string | null;
+  pp_price: number | null;
 }
 
 interface CostSummary {
   total_cost: number;
   total_cost_latest: number;
+  total_cost_pp: number | null;
   gross_margin: number;
   gross_margin_latest: number;
+  gross_margin_pp: number | null;
   margin_pct: number | null;
   margin_pct_latest: number | null;
+  margin_pct_pp: number | null;
   costed_ingredients: number;
   missing_ingredients: number;
+  pp_costed_ingredients: number;
 }
 
 interface CatalogEntry {
@@ -163,6 +168,37 @@ export default function RecipeDetailPage() {
           </div>
         </div>
       </div>
+      {/* P&P Pricing comparison */}
+      {cs.total_cost_pp != null && cs.total_cost_pp > 0 && (
+        <div className="mb-2 mt-4">
+          <p className="text-xs text-stone-400 uppercase tracking-wider mb-2">P&P Sourcing (wholesale + 20%)</p>
+          <div className="grid grid-cols-4 gap-4">
+            <div className="bg-white border rounded-lg p-4">
+              <p className="text-xs text-stone-400 uppercase">Sell Price</p>
+              <p className="text-2xl font-mono font-medium text-stone-900">${recipe.sell_price.toFixed(2)}</p>
+            </div>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <p className="text-xs text-emerald-600 uppercase">P&P Flower Cost</p>
+              <p className="text-2xl font-mono font-medium text-emerald-700">${cs.total_cost_pp.toFixed(2)}</p>
+              {cs.pp_costed_ingredients < cs.costed_ingredients + cs.missing_ingredients && (
+                <p className="text-[10px] text-stone-400 mt-1">{cs.pp_costed_ingredients} of {cs.costed_ingredients + cs.missing_ingredients} priced</p>
+              )}
+            </div>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <p className="text-xs text-emerald-600 uppercase">P&P Margin</p>
+              <p className="text-2xl font-mono font-medium text-emerald-700">${cs.gross_margin_pp!.toFixed(2)}</p>
+            </div>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <p className="text-xs text-emerald-600 uppercase">P&P Margin %</p>
+              <p className="text-2xl font-mono font-medium text-emerald-700">{cs.margin_pct_pp!.toFixed(1)}%</p>
+              {cs.margin_pct_latest != null && cs.margin_pct_pp! > cs.margin_pct_latest && (
+                <p className="text-[10px] text-emerald-600 mt-1">+{(cs.margin_pct_pp! - cs.margin_pct_latest).toFixed(1)}pp vs current</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Historical average comparison */}
       {cs.total_cost > 0 && cs.total_cost !== cs.total_cost_latest && (
         <p className="text-xs text-stone-400 mb-8">
@@ -260,6 +296,8 @@ function IngredientTable({
               {!isFoliage && <TableHead className="text-right">Latest $/Stem</TableHead>}
               {!isFoliage && <TableHead className="text-right">Avg $/Stem</TableHead>}
               {!isFoliage && <TableHead className="text-right">Line Cost</TableHead>}
+              {!isFoliage && <TableHead className="text-right">P&P $/Stem</TableHead>}
+              {!isFoliage && <TableHead className="text-right">P&P Line</TableHead>}
               <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
@@ -268,7 +306,11 @@ function IngredientTable({
               const latestCost = ing.latest_cost != null ? Number(ing.latest_cost) : null;
               const avgCostVal = ing.avg_cost != null && Number(ing.cost_count) > 0 ? Number(ing.avg_cost) : null;
               const costForLine = latestCost ?? avgCostVal;
-              const lineCost = costForLine != null ? (Number(ing.quantity) || 1) * costForLine : null;
+              const qty = Number(ing.quantity) || 1;
+              const lineCost = costForLine != null ? qty * costForLine : null;
+              const ppPrice = ing.pp_price != null ? Number(ing.pp_price) : null;
+              const ppLineCost = ppPrice != null ? qty * ppPrice : null;
+              const ppIsCheaper = ppPrice != null && costForLine != null && ppPrice < costForLine;
               return (
                 <TableRow key={ing.id} className={Number(ing.cost_count) === 0 && !isFoliage ? 'bg-amber-50/50' : ''}>
                   <TableCell className="font-medium">{ing.ingredient_name}</TableCell>
@@ -299,6 +341,16 @@ function IngredientTable({
                   {!isFoliage && (
                     <TableCell className="text-right font-mono text-sm font-medium">
                       {lineCost != null ? `$${lineCost.toFixed(2)}` : '-'}
+                    </TableCell>
+                  )}
+                  {!isFoliage && (
+                    <TableCell className={`text-right font-mono text-sm ${ppIsCheaper ? 'text-emerald-700' : 'text-stone-400'}`}>
+                      {ppPrice != null ? `$${ppPrice.toFixed(2)}` : <span className="text-stone-300">-</span>}
+                    </TableCell>
+                  )}
+                  {!isFoliage && (
+                    <TableCell className={`text-right font-mono text-sm font-medium ${ppIsCheaper ? 'text-emerald-700' : 'text-stone-400'}`}>
+                      {ppLineCost != null ? `$${ppLineCost.toFixed(2)}` : <span className="text-stone-300">-</span>}
                     </TableCell>
                   )}
                   <TableCell>
