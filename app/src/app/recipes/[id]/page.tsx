@@ -62,6 +62,7 @@ interface RecipeDetail {
   sell_price: number;
   container: string | null;
   category_name: string;
+  image_url: string | null;
   ingredients: Ingredient[];
   cost_summary: CostSummary;
 }
@@ -131,12 +132,21 @@ export default function RecipeDetailPage() {
         &larr; Back to recipes
       </Link>
 
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-1">
-          <h1 className="text-2xl font-semibold text-stone-900">{recipe.name}</h1>
-          <Badge variant="outline">{recipe.category_name}</Badge>
+      <div className="mb-6 flex gap-6">
+        {recipe.image_url && (
+          <img
+            src={recipe.image_url}
+            alt={recipe.name}
+            className="w-40 h-40 object-contain rounded-lg border bg-white flex-shrink-0"
+          />
+        )}
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl font-semibold text-stone-900">{recipe.name}</h1>
+            <Badge variant="outline">{recipe.category_name}</Badge>
+          </div>
+          {recipe.container && <p className="text-sm text-stone-500 mt-1">Container: {recipe.container}</p>}
         </div>
-        {recipe.container && <p className="text-sm text-stone-500 mt-1">Container: {recipe.container}</p>}
       </div>
 
       {/* Cost Summary - Latest (what it costs today) */}
