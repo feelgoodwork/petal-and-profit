@@ -1,5 +1,5 @@
 import { getDb } from '@/lib/db';
-import { loadCurrentCosts, loadCatalogIndex, resolveFlowerCost } from '@/lib/matching/cost-resolver';
+import { loadCurrentCosts, loadCatalogIndex, resolveFlowerCost, loadPpPrices, resolvePpPrice } from '@/lib/matching/cost-resolver';
 
 /**
  * GET /api/savings
@@ -32,25 +32,8 @@ export async function GET() {
     const allCosts = await loadCurrentCosts();
     const { byId: catalogById, byName: catalogByName } = await loadCatalogIndex();
 
-    // 3. Load P&P benchmark prices: catalog_type → pp_price, base_type → pp_price
-    const benchmarks = await sql`
-      SELECT catalog_type, base_type, MIN(pp_price)::numeric as pp_price
-      FROM wholesale_benchmarks
-      GROUP BY catalog_type, base_type
-    `;
-    const ppByType = new Map<string, number>();
-    const ppByBase = new Map<string, number>();
-    for (const b of benchmarks) {
-      const pp = Number(b.pp_price);
-      if (b.catalog_type) {
-        const k = String(b.catalog_type);
-        if (!ppByType.has(k) || pp < ppByType.get(k)!) ppByType.set(k, pp);
-      }
-      if (b.base_type) {
-        const k = String(b.base_type);
-        if (!ppByBase.has(k) || pp < ppByBase.get(k)!) ppByBase.set(k, pp);
-      }
-    }
+    // 3. Load P&P benchmark prices with tiered fallback
+    const { byType: ppByType, byBase: ppByBase } = await loadPpPrices();
 
     // 4. Load recipe names and sell prices
     const recipes = await sql`
@@ -132,13 +115,10 @@ export async function GET() {
           ingredientsCosted++;
         }
 
-        const cat = catalogById.get(ing.flowerId);
-        if (cat) {
-          const ppPrice = ppByType.get(cat.canonical_name) ?? (cat.base_type ? ppByBase.get(cat.base_type) : undefined);
-          if (ppPrice != null) {
-            ppCost += ing.qty * ppPrice;
-            ppIngredientsCosted++;
-          }
+        const pp = resolvePpPrice(ing.flowerId, ppByType, ppByBase, catalogById);
+        if (pp) {
+          ppCost += ing.qty * pp.pp_price;
+          ppIngredientsCosted++;
         }
       }
 

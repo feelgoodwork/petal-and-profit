@@ -1,5 +1,5 @@
 import { getDb } from '@/lib/db';
-import { loadCurrentCosts, loadCatalogIndex, resolveFlowerCost } from '@/lib/matching/cost-resolver';
+import { loadCurrentCosts, loadCatalogIndex, resolveFlowerCost, loadPpPrices, resolvePpPrice } from '@/lib/matching/cost-resolver';
 
 type Row = Record<string, unknown>;
 
@@ -35,26 +35,8 @@ export async function POST() {
     const costs = await loadCurrentCosts();
     const { byId: catalogById, byName: catalogByName } = await loadCatalogIndex();
 
-    // Load wholesale benchmarks
-    const benchmarks = await sql`
-      SELECT catalog_type, base_type, MIN(pp_price) as pp_price
-      FROM wholesale_benchmarks
-      GROUP BY catalog_type, base_type
-    ` as Row[];
-
-    const ppByType = new Map<string, number>();
-    const ppByBase = new Map<string, number>();
-    for (const b of benchmarks) {
-      const pp = Number(b.pp_price);
-      if (b.catalog_type) {
-        const key = String(b.catalog_type);
-        if (!ppByType.has(key) || pp < ppByType.get(key)!) ppByType.set(key, pp);
-      }
-      if (b.base_type) {
-        const key = String(b.base_type);
-        if (!ppByBase.has(key) || pp < ppByBase.get(key)!) ppByBase.set(key, pp);
-      }
-    }
+    // Load PP prices with tiered fallback
+    const { byType: ppByType, byBase: ppByBase } = await loadPpPrices();
 
     const recipes = await sql`SELECT * FROM recipes` as Row[];
     const allIngredients = await sql`SELECT recipe_id, flower_id, quantity FROM recipe_ingredients` as Row[];
@@ -88,16 +70,12 @@ export async function POST() {
           missingIngredients++;
         }
 
-        // P&P cost
+        // P&P cost with tiered fallback
         if (flowerId) {
-          const cat = catalogById.get(flowerId);
-          if (cat) {
-            const ppPrice = ppByType.get(cat.canonical_name)
-              ?? (cat.base_type ? ppByBase.get(cat.base_type) : undefined);
-            if (ppPrice != null) {
-              ppFlowerCost += qty * ppPrice;
-              continue;
-            }
+          const pp = resolvePpPrice(flowerId, ppByType, ppByBase, catalogById);
+          if (pp) {
+            ppFlowerCost += qty * pp.pp_price;
+            continue;
           }
         }
         ppMissing++;

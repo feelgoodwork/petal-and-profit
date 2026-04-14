@@ -28,6 +28,22 @@ const COLOR_FAMILY: Record<string, string> = {
   'pale peach': 'peach',
 };
 
+// Product family mapping: sub-type → parent type for PP price fallback
+// When we don't have a wholesale benchmark for "mini carnations",
+// use "standard carnations" as a ceiling proxy.
+const PRODUCT_FAMILY: Record<string, string> = {
+  'mini carnations': 'standard carnations',
+  'mini gerberas': 'standard gerberas',
+  'spray roses': 'standard roses',
+  'miniature spray roses': 'standard roses',
+  'garden roses': 'standard roses',
+  'hybrid lilies': 'oriental lilies',
+  'calla lilies': 'oriental lilies',
+  'daisy poms': 'cushion poms',
+  'button poms': 'cushion poms',
+  'spider mums': 'cushion poms',
+};
+
 export type CostTier = 'exact' | 'color_family' | 'base_type';
 
 export interface ResolvedCost {
@@ -207,6 +223,74 @@ export function resolveFlowerCost(
         };
       }
     }
+  }
+
+  return null;
+}
+
+/**
+ * Load wholesale benchmark PP prices into lookup maps.
+ */
+export async function loadPpPrices(): Promise<{
+  byType: Map<string, number>;
+  byBase: Map<string, number>;
+}> {
+  const sql = getDb();
+  const rows = await sql`
+    SELECT catalog_type, base_type, MIN(pp_price)::numeric as pp_price
+    FROM wholesale_benchmarks
+    GROUP BY catalog_type, base_type
+  `;
+
+  const byType = new Map<string, number>();
+  const byBase = new Map<string, number>();
+
+  for (const b of rows) {
+    const pp = Number(b.pp_price);
+    if (b.catalog_type) {
+      const k = String(b.catalog_type);
+      if (!byType.has(k) || pp < byType.get(k)!) byType.set(k, pp);
+    }
+    if (b.base_type) {
+      const k = String(b.base_type);
+      if (!byBase.has(k) || pp < byBase.get(k)!) byBase.set(k, pp);
+    }
+  }
+
+  return { byType, byBase };
+}
+
+/**
+ * Resolve PP price for a flower_id with tiered fallback:
+ *   1. Exact catalog_type match
+ *   2. Base type match
+ *   3. Product family fallback (mini carnations → standard carnations)
+ */
+export function resolvePpPrice(
+  flowerId: number,
+  ppByType: Map<string, number>,
+  ppByBase: Map<string, number>,
+  catalogById: Map<number, { canonical_name: string; base_type: string | null }>,
+): { pp_price: number; pp_source: string } | null {
+  const entry = catalogById.get(flowerId);
+  if (!entry) return null;
+
+  // Tier 1: exact catalog_type
+  const exact = ppByType.get(entry.canonical_name);
+  if (exact != null) return { pp_price: exact, pp_source: entry.canonical_name };
+
+  // Tier 2: base_type
+  if (entry.base_type) {
+    const base = ppByBase.get(entry.base_type);
+    if (base != null) return { pp_price: base, pp_source: entry.base_type };
+  }
+
+  // Tier 3: product family (mini carnations → standard carnations)
+  const baseType = entry.base_type || entry.canonical_name;
+  const familyType = PRODUCT_FAMILY[baseType];
+  if (familyType) {
+    const family = ppByBase.get(familyType) ?? ppByType.get(familyType);
+    if (family != null) return { pp_price: family, pp_source: familyType };
   }
 
   return null;

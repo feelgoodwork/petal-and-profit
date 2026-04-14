@@ -1,5 +1,5 @@
 import { getDb } from '@/lib/db';
-import { loadCurrentCosts, loadCatalogIndex, resolveFlowerCost } from '@/lib/matching/cost-resolver';
+import { loadCurrentCosts, loadCatalogIndex, resolveFlowerCost, loadPpPrices, resolvePpPrice } from '@/lib/matching/cost-resolver';
 import type { NextRequest } from 'next/server';
 
 export async function GET(
@@ -23,20 +23,17 @@ export async function GET(
     }
 
     const rawIngredients = await sql`
-      SELECT ri.*, fc.canonical_name, fc.base_type,
-        (SELECT MIN(wb.pp_price) FROM wholesale_benchmarks wb
-         WHERE wb.catalog_type = fc.canonical_name
-            OR wb.catalog_type = COALESCE(fc.base_type, fc.canonical_name)
-        ) as pp_price
+      SELECT ri.*, fc.canonical_name, fc.base_type
       FROM recipe_ingredients ri
       LEFT JOIN flower_catalog fc ON ri.flower_id = fc.id
       WHERE ri.recipe_id = ${numId}
       ORDER BY ri.is_foliage, ri.id
     `;
 
-    // Load costs and catalog for tiered resolution
+    // Load costs, catalog, and PP prices for tiered resolution
     const costs = await loadCurrentCosts();
     const { byId: catalogById, byName: catalogByName } = await loadCatalogIndex();
+    const { byType: ppByType, byBase: ppByBase } = await loadPpPrices();
 
     let totalCostAvg = 0;
     let totalCostLatest = 0;
@@ -60,8 +57,10 @@ export async function GET(
         missingIngredients++;
       }
 
-      if (ing.pp_price != null) {
-        totalCostPp += qty * Number(ing.pp_price);
+      // Resolve PP price with tiered fallback
+      const pp = flowerId ? resolvePpPrice(flowerId, ppByType, ppByBase, catalogById) : null;
+      if (pp) {
+        totalCostPp += qty * pp.pp_price;
         ppCostedIngredients++;
       }
 
@@ -75,6 +74,8 @@ export async function GET(
         latest_cost_date: resolved?.latest_cost_date ?? null,
         cost_match_tier: resolved?.match_tier ?? null,
         cost_source_name: resolved?.source_name ?? null,
+        pp_price: pp?.pp_price ?? null,
+        pp_source: pp?.pp_source ?? null,
       };
     });
 
