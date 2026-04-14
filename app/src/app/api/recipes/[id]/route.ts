@@ -1,4 +1,5 @@
 import { getDb } from '@/lib/db';
+import { loadCurrentCosts, loadCatalogIndex, resolveFlowerCost } from '@/lib/matching/cost-resolver';
 import type { NextRequest } from 'next/server';
 
 export async function GET(
@@ -21,14 +22,8 @@ export async function GET(
       return Response.json({ error: 'Recipe not found' }, { status: 404 });
     }
 
-    const ingredients = await sql`
+    const rawIngredients = await sql`
       SELECT ri.*, fc.canonical_name, fc.base_type,
-        (SELECT AVG(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true) as avg_cost,
-        (SELECT MIN(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true) as min_cost,
-        (SELECT MAX(ic.unit_cost) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true) as max_cost,
-        (SELECT COUNT(*) FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true) as cost_count,
-        (SELECT ic.unit_cost FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true ORDER BY ic.parsed_date DESC NULLS LAST, ic.id DESC LIMIT 1) as latest_cost,
-        (SELECT ic.invoice_date FROM ingredient_costs ic WHERE ic.flower_id = ri.flower_id AND ic.is_current = true ORDER BY ic.parsed_date DESC NULLS LAST, ic.id DESC LIMIT 1) as latest_cost_date,
         (SELECT MIN(wb.pp_price) FROM wholesale_benchmarks wb
          WHERE wb.catalog_type = fc.canonical_name
             OR wb.catalog_type = COALESCE(fc.base_type, fc.canonical_name)
@@ -39,26 +34,49 @@ export async function GET(
       ORDER BY ri.is_foliage, ri.id
     `;
 
+    // Load costs and catalog for tiered resolution
+    const costs = await loadCurrentCosts();
+    const { byId: catalogById, byName: catalogByName } = await loadCatalogIndex();
+
     let totalCostAvg = 0;
     let totalCostLatest = 0;
     let totalCostPp = 0;
     let costedIngredients = 0;
     let missingIngredients = 0;
     let ppCostedIngredients = 0;
-    for (const ing of ingredients) {
+
+    const ingredients = rawIngredients.map(ing => {
       const qty = Number(ing.quantity) || 1;
-      if (ing.avg_cost != null && Number(ing.cost_count) > 0) {
-        totalCostAvg += qty * Number(ing.avg_cost);
-        totalCostLatest += qty * (ing.latest_cost != null ? Number(ing.latest_cost) : Number(ing.avg_cost));
+      const flowerId = ing.flower_id ? Number(ing.flower_id) : null;
+
+      // Resolve cost with tiered fallback
+      const resolved = flowerId ? resolveFlowerCost(flowerId, costs, catalogById, catalogByName) : null;
+
+      if (resolved) {
+        totalCostAvg += qty * resolved.avg_cost;
+        totalCostLatest += qty * resolved.latest_cost;
         costedIngredients++;
       } else {
         missingIngredients++;
       }
+
       if (ing.pp_price != null) {
         totalCostPp += qty * Number(ing.pp_price);
         ppCostedIngredients++;
       }
-    }
+
+      return {
+        ...ing,
+        avg_cost: resolved?.avg_cost ?? null,
+        min_cost: resolved?.min_cost ?? null,
+        max_cost: resolved?.max_cost ?? null,
+        cost_count: resolved?.cost_count ?? 0,
+        latest_cost: resolved?.latest_cost ?? null,
+        latest_cost_date: resolved?.latest_cost_date ?? null,
+        cost_match_tier: resolved?.match_tier ?? null,
+        cost_source_name: resolved?.source_name ?? null,
+      };
+    });
 
     const sellPrice = Number(recipe.sell_price);
 

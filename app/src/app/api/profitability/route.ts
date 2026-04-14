@@ -1,4 +1,5 @@
 import { getDb } from '@/lib/db';
+import { loadCurrentCosts, loadCatalogIndex, resolveFlowerCost } from '@/lib/matching/cost-resolver';
 
 type Row = Record<string, unknown>;
 
@@ -30,12 +31,15 @@ export async function POST() {
 
     await sql`DELETE FROM profitability_snapshots`;
 
-    // Load wholesale benchmarks into a lookup: catalog_type → pp_price, base_type → pp_price
+    // Load costs with tiered resolution
+    const costs = await loadCurrentCosts();
+    const { byId: catalogById, byName: catalogByName } = await loadCatalogIndex();
+
+    // Load wholesale benchmarks
     const benchmarks = await sql`
-      SELECT catalog_type, base_type, unit_type,
-        MIN(pp_price) as pp_price
+      SELECT catalog_type, base_type, MIN(pp_price) as pp_price
       FROM wholesale_benchmarks
-      GROUP BY catalog_type, base_type, unit_type
+      GROUP BY catalog_type, base_type
     ` as Row[];
 
     const ppByType = new Map<string, number>();
@@ -52,28 +56,21 @@ export async function POST() {
       }
     }
 
-    // Load flower catalog for base_type fallback
-    const catalogRows = await sql`SELECT id, canonical_name, base_type FROM flower_catalog` as Row[];
-    const catalogById = new Map<number, { canonical_name: string; base_type: string | null }>();
-    for (const c of catalogRows) {
-      catalogById.set(Number(c.id), {
-        canonical_name: String(c.canonical_name),
-        base_type: c.base_type ? String(c.base_type) : null,
-      });
+    const recipes = await sql`SELECT * FROM recipes` as Row[];
+    const allIngredients = await sql`SELECT recipe_id, flower_id, quantity FROM recipe_ingredients` as Row[];
+
+    // Group ingredients by recipe
+    const byRecipe = new Map<number, Row[]>();
+    for (const ing of allIngredients) {
+      const rid = Number(ing.recipe_id);
+      if (!byRecipe.has(rid)) byRecipe.set(rid, []);
+      byRecipe.get(rid)!.push(ing);
     }
 
-    const recipes = await sql`SELECT * FROM recipes` as Row[];
     let computed = 0;
 
     for (const recipe of recipes) {
-      const ingredients = await sql`
-        SELECT ri.*,
-          (SELECT AVG(ic.unit_cost) FROM ingredient_costs ic WHERE ic.is_current = true AND ic.flower_id = ri.flower_id) as avg_cost,
-          (SELECT COUNT(*) FROM ingredient_costs ic WHERE ic.is_current = true AND ic.flower_id = ri.flower_id) as cost_count
-        FROM recipe_ingredients ri
-        WHERE ri.recipe_id = ${recipe.id}
-      ` as Row[];
-
+      const ingredients = byRecipe.get(Number(recipe.id)) || [];
       let totalFlowerCost = 0;
       let missingIngredients = 0;
       let ppFlowerCost = 0;
@@ -81,17 +78,18 @@ export async function POST() {
 
       for (const ing of ingredients) {
         const qty = Number(ing.quantity) || 1;
+        const flowerId = ing.flower_id ? Number(ing.flower_id) : null;
 
-        // Actual cost
-        if (ing.flower_id && ing.avg_cost != null && Number(ing.cost_count) > 0) {
-          totalFlowerCost += qty * Number(ing.avg_cost);
+        // Tiered cost resolution
+        const resolved = flowerId ? resolveFlowerCost(flowerId, costs, catalogById, catalogByName) : null;
+        if (resolved) {
+          totalFlowerCost += qty * resolved.avg_cost;
         } else {
           missingIngredients++;
         }
 
         // P&P cost
-        if (ing.flower_id) {
-          const flowerId = Number(ing.flower_id);
+        if (flowerId) {
           const cat = catalogById.get(flowerId);
           if (cat) {
             const ppPrice = ppByType.get(cat.canonical_name)

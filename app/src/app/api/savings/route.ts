@@ -1,4 +1,5 @@
 import { getDb } from '@/lib/db';
+import { loadCurrentCosts, loadCatalogIndex, resolveFlowerCost } from '@/lib/matching/cost-resolver';
 
 /**
  * GET /api/savings
@@ -27,17 +28,9 @@ export async function GET() {
       return Response.json({ summary: null, items: [] });
     }
 
-    // 2. Load avg cost per flower_id (all dates)
-    const costRows = await sql`
-      SELECT flower_id, AVG(unit_cost)::numeric as avg_cost
-      FROM ingredient_costs
-      WHERE is_current = true
-      GROUP BY flower_id
-    `;
-    const avgCostByFlower = new Map<number, number>();
-    for (const r of costRows) {
-      avgCostByFlower.set(Number(r.flower_id), Number(r.avg_cost));
-    }
+    // 2. Load tiered costs
+    const allCosts = await loadCurrentCosts();
+    const { byId: catalogById, byName: catalogByName } = await loadCatalogIndex();
 
     // 3. Load P&P benchmark prices: catalog_type → pp_price, base_type → pp_price
     const benchmarks = await sql`
@@ -59,17 +52,7 @@ export async function GET() {
       }
     }
 
-    // 4. Load flower catalog for name/base_type lookup
-    const catalog = await sql`SELECT id, canonical_name, base_type FROM flower_catalog`;
-    const catalogById = new Map<number, { name: string; baseType: string | null }>();
-    for (const c of catalog) {
-      catalogById.set(Number(c.id), {
-        name: String(c.canonical_name),
-        baseType: c.base_type ? String(c.base_type) : null,
-      });
-    }
-
-    // 5. Load recipe names and sell prices
+    // 4. Load recipe names and sell prices
     const recipes = await sql`
       SELECT r.id, r.name, r.sell_price, rc.name as category_name
       FROM recipes r
@@ -143,15 +126,15 @@ export async function GET() {
       for (const ing of ingredients) {
         if (!ing.flowerId) continue;
 
-        const avgCost = avgCostByFlower.get(ing.flowerId);
-        if (avgCost != null) {
-          currentCost += ing.qty * avgCost;
+        const resolved = resolveFlowerCost(ing.flowerId, allCosts, catalogById, catalogByName);
+        if (resolved) {
+          currentCost += ing.qty * resolved.avg_cost;
           ingredientsCosted++;
         }
 
         const cat = catalogById.get(ing.flowerId);
         if (cat) {
-          const ppPrice = ppByType.get(cat.name) ?? (cat.baseType ? ppByBase.get(cat.baseType) : undefined);
+          const ppPrice = ppByType.get(cat.canonical_name) ?? (cat.base_type ? ppByBase.get(cat.base_type) : undefined);
           if (ppPrice != null) {
             ppCost += ing.qty * ppPrice;
             ppIngredientsCosted++;

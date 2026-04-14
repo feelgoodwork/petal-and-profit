@@ -31,6 +31,8 @@ interface Ingredient {
   latest_cost: number | null;
   latest_cost_date: string | null;
   pp_price: number | null;
+  cost_match_tier: 'exact' | 'color_family' | 'base_type' | null;
+  cost_source_name: string | null;
 }
 
 interface CostSummary {
@@ -296,6 +298,7 @@ function IngredientTable({
               {!isFoliage && <TableHead className="text-right">Latest $/Stem</TableHead>}
               {!isFoliage && <TableHead className="text-right">Avg $/Stem</TableHead>}
               {!isFoliage && <TableHead className="text-right">Line Cost</TableHead>}
+              {!isFoliage && <TableHead>Cost Source</TableHead>}
               {!isFoliage && <TableHead className="text-right">P&P $/Stem</TableHead>}
               {!isFoliage && <TableHead className="text-right">P&P Line</TableHead>}
               <TableHead className="w-24"></TableHead>
@@ -341,6 +344,22 @@ function IngredientTable({
                   {!isFoliage && (
                     <TableCell className="text-right font-mono text-sm font-medium">
                       {lineCost != null ? `$${lineCost.toFixed(2)}` : '-'}
+                    </TableCell>
+                  )}
+                  {!isFoliage && (
+                    <TableCell className="text-xs">
+                      {ing.cost_match_tier === 'exact' && (
+                        <span className="text-emerald-600">exact</span>
+                      )}
+                      {ing.cost_match_tier === 'color_family' && (
+                        <span className="text-amber-600 capitalize">{ing.cost_source_name}</span>
+                      )}
+                      {ing.cost_match_tier === 'base_type' && (
+                        <span className="text-amber-600 capitalize">{ing.cost_source_name}</span>
+                      )}
+                      {!ing.cost_match_tier && costForLine == null && (
+                        <span className="text-stone-300">-</span>
+                      )}
                     </TableCell>
                   )}
                   {!isFoliage && (

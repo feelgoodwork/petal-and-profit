@@ -1,6 +1,6 @@
 /**
  * Recompute profitability snapshots for all recipes.
- * Replaces POST /api/profitability (which can time out on Vercel).
+ * Uses tiered cost resolution: exact → color family → base type.
  * Usage: node scripts/rebuild-profitability.js
  */
 const { neon } = require('@neondatabase/serverless');
@@ -17,19 +17,71 @@ if (fs.existsSync(envPath)) {
 
 const sql = neon(process.env.DATABASE_URL);
 
+// Color family mapping (same as cost-resolver.ts)
+const COLOR_FAMILY = {
+  'hot pink': 'pink', 'light pink': 'pink', 'pale pink': 'pink',
+  'dusty pink': 'pink', 'antique pink': 'pink',
+  'deep purple': 'purple', 'dark orange': 'orange',
+  'antique green': 'green', 'pale green': 'green',
+  'golden yellow': 'yellow', 'deep coral': 'coral', 'pale peach': 'peach',
+};
+
+function getColorFamilyName(name) {
+  for (const [mod, base] of Object.entries(COLOR_FAMILY)) {
+    if (name.startsWith(mod + ' ')) return base + name.substring(mod.length);
+  }
+  return null;
+}
+
+function resolveFlowerCost(flowerId, costsByFlower, catalogById, catalogByName) {
+  const entry = catalogById.get(flowerId);
+  if (!entry) return null;
+
+  // Tier 1: exact
+  const exact = costsByFlower.get(flowerId);
+  if (exact) return exact;
+
+  // Tier 2: color family
+  const familyName = getColorFamilyName(entry.canonical_name);
+  if (familyName) {
+    const fid = catalogByName.get(familyName);
+    if (fid) { const c = costsByFlower.get(fid); if (c) return c; }
+  }
+
+  // Tier 3: base type
+  if (entry.base_type && entry.base_type !== entry.canonical_name) {
+    const bid = catalogByName.get(entry.base_type);
+    if (bid) { const c = costsByFlower.get(bid); if (c) return c; }
+  }
+
+  return null;
+}
+
 async function main() {
-  console.log('Recomputing profitability...');
+  console.log('Recomputing profitability (with tiered costs)...');
 
   await sql`DELETE FROM profitability_snapshots`;
 
   const recipes = await sql`SELECT * FROM recipes`;
   console.log(`  ${recipes.length} recipes to process`);
 
-  // Load all ingredient costs into memory to avoid per-recipe queries
+  // Load current costs by flower_id
   const costs = await sql`SELECT flower_id, AVG(unit_cost) as avg_cost, COUNT(*) as cnt FROM ingredient_costs WHERE is_current = true GROUP BY flower_id`;
-  const costMap = new Map(costs.map(c => [Number(c.flower_id), { avg: Number(c.avg_cost), cnt: Number(c.cnt) }]));
+  const costsByFlower = new Map();
+  for (const c of costs) {
+    costsByFlower.set(Number(c.flower_id), { avg: Number(c.avg_cost), cnt: Number(c.cnt) });
+  }
 
-  // Load all recipe ingredients in one query
+  // Load catalog
+  const catalog = await sql`SELECT id, canonical_name, base_type FROM flower_catalog`;
+  const catalogById = new Map();
+  const catalogByName = new Map();
+  for (const c of catalog) {
+    catalogById.set(Number(c.id), { canonical_name: String(c.canonical_name), base_type: c.base_type ? String(c.base_type) : null });
+    catalogByName.set(String(c.canonical_name), Number(c.id));
+  }
+
+  // Load all recipe ingredients
   const allIngredients = await sql`SELECT recipe_id, flower_id, quantity FROM recipe_ingredients`;
   const byRecipe = new Map();
   for (const ing of allIngredients) {
@@ -39,6 +91,7 @@ async function main() {
 
   let computed = 0;
   let withCost = 0;
+  let tierCounts = { exact: 0, color_family: 0, base_type: 0, missing: 0 };
 
   for (const recipe of recipes) {
     const ingredients = byRecipe.get(recipe.id) || [];
@@ -46,11 +99,25 @@ async function main() {
     let missingIngredients = 0;
 
     for (const ing of ingredients) {
-      const cost = ing.flower_id ? costMap.get(Number(ing.flower_id)) : null;
-      if (cost && cost.cnt > 0) {
-        totalFlowerCost += (Number(ing.quantity) || 1) * cost.avg;
+      const flowerId = ing.flower_id ? Number(ing.flower_id) : null;
+      const resolved = flowerId ? resolveFlowerCost(flowerId, costsByFlower, catalogById, catalogByName) : null;
+
+      if (resolved && resolved.cnt > 0) {
+        totalFlowerCost += (Number(ing.quantity) || 1) * resolved.avg;
+        // Track which tier was used
+        const exact = costsByFlower.get(flowerId);
+        if (exact && exact.cnt > 0) tierCounts.exact++;
+        else {
+          const entry = catalogById.get(flowerId);
+          const familyName = entry ? getColorFamilyName(entry.canonical_name) : null;
+          const familyId = familyName ? catalogByName.get(familyName) : null;
+          const familyCost = familyId ? costsByFlower.get(familyId) : null;
+          if (familyCost && familyCost.cnt > 0) tierCounts.color_family++;
+          else tierCounts.base_type++;
+        }
       } else {
         missingIngredients++;
+        tierCounts.missing++;
       }
     }
 
@@ -78,8 +145,13 @@ async function main() {
   `;
 
   console.log(`\nDone. ${computed} recipes computed, ${withCost} have full cost data`);
-  console.log(`Margin range: ${Number(stats.min_margin).toFixed(1)}% – ${Number(stats.max_margin).toFixed(1)}%`);
+  console.log(`Margin range: ${Number(stats.min_margin).toFixed(1)}% - ${Number(stats.max_margin).toFixed(1)}%`);
   console.log(`Average margin: ${Number(stats.avg_margin).toFixed(1)}%`);
+  console.log(`\nCost resolution tiers:`);
+  console.log(`  Exact match: ${tierCounts.exact}`);
+  console.log(`  Color family: ${tierCounts.color_family}`);
+  console.log(`  Base type: ${tierCounts.base_type}`);
+  console.log(`  Missing: ${tierCounts.missing}`);
 }
 
 main().catch(e => { console.error('Failed:', e.message); process.exit(1); });
