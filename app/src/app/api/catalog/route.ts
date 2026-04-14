@@ -11,7 +11,11 @@ export async function GET() {
         (SELECT MIN(unit_cost) FROM ingredient_costs WHERE flower_id = fc.id) as min_cost,
         (SELECT MAX(unit_cost) FROM ingredient_costs WHERE flower_id = fc.id) as max_cost,
         (SELECT COUNT(*) FROM ingredient_costs WHERE flower_id = fc.id) as cost_count,
-        CASE WHEN fc.category = 'foliage' THEN 'bunch' ELSE 'stem' END as price_unit
+        CASE WHEN fc.category = 'foliage' THEN 'bunch' ELSE 'stem' END as price_unit,
+        (SELECT MIN(wb.pp_price) FROM wholesale_benchmarks wb
+         WHERE wb.catalog_type = fc.canonical_name
+            OR wb.catalog_type = COALESCE(fc.base_type, fc.canonical_name)
+        ) as pp_price
       FROM flower_catalog fc
       ORDER BY fc.category, COALESCE(fc.base_type, fc.canonical_name), fc.canonical_name
     `;

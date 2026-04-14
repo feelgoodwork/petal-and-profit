@@ -80,7 +80,7 @@ export default function SavingsPage() {
         <div className="text-center py-16 text-stone-400 bg-white border rounded-lg">
           <p className="text-lg mb-2">No savings opportunities found</p>
           <p className="text-sm">
-            Run the Oberer&apos;s scraper first: <code className="bg-stone-100 px-2 py-0.5 rounded">node scripts/scrape-oberers.js</code>
+            No wholesale benchmark data loaded yet. Contact your P&P rep to get started.
           </p>
         </div>
       </div>
@@ -154,7 +154,7 @@ export default function SavingsPage() {
       )}
 
       <p className="text-xs text-stone-400 mt-4">
-        P&P pricing = wholesale cost + 20% markup. Benchmark source: Oberer&apos;s Flower Market.
+        P&P pricing = wholesale cost + 20% markup.
         Only showing types where current vendor cost exceeds P&P price by 10% or more.
       </p>
     </div>

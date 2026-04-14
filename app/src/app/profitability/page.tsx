@@ -73,8 +73,9 @@ export default function ProfitabilityPage() {
                 <TableHead>Category</TableHead>
                 <TableHead className="text-right">Sell Price</TableHead>
                 <TableHead className="text-right">Flower Cost</TableHead>
-                <TableHead className="text-right">Margin</TableHead>
                 <TableHead className="text-right">Margin %</TableHead>
+                <TableHead className="text-right">P&P Cost</TableHead>
+                <TableHead className="text-right">P&P Margin %</TableHead>
                 <TableHead className="text-right">Completeness</TableHead>
               </TableRow>
             </TableHeader>
@@ -98,13 +99,18 @@ export default function ProfitabilityPage() {
                       : '-'}
                   </TableCell>
                   <TableCell className={`text-right font-mono text-sm font-medium ${marginColor(s.margin_pct, s.missing_ingredients)}`}>
-                    {s.gross_margin != null && s.total_flower_cost != null && s.total_flower_cost > 0
-                      ? `$${s.gross_margin.toFixed(2)}`
-                      : '-'}
-                  </TableCell>
-                  <TableCell className={`text-right font-mono text-sm font-medium ${marginColor(s.margin_pct, s.missing_ingredients)}`}>
                     {s.margin_pct != null && s.total_flower_cost != null && s.total_flower_cost > 0
                       ? `${s.margin_pct.toFixed(1)}%`
+                      : '-'}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-sm">
+                    {s.pp_flower_cost != null && s.pp_flower_cost > 0
+                      ? <span className="text-emerald-700">${s.pp_flower_cost.toFixed(2)}</span>
+                      : <span className="text-stone-300">-</span>}
+                  </TableCell>
+                  <TableCell className={`text-right font-mono text-sm font-medium ${s.pp_margin_pct != null && s.pp_margin_pct > (s.margin_pct ?? 0) ? 'text-emerald-700' : s.pp_margin_pct != null ? marginColor(s.pp_margin_pct, s.pp_missing ?? 0) : 'text-stone-300'}`}>
+                    {s.pp_margin_pct != null && s.pp_flower_cost != null && s.pp_flower_cost > 0
+                      ? `${s.pp_margin_pct.toFixed(1)}%`
                       : '-'}
                   </TableCell>
                   <TableCell className="text-right">

@@ -119,6 +119,10 @@ export interface ProfitabilitySnapshot {
   gross_margin: number | null;
   margin_pct: number | null;
   missing_ingredients: number;
+  pp_flower_cost: number | null;
+  pp_margin: number | null;
+  pp_margin_pct: number | null;
+  pp_missing: number;
   computed_at: string;
   // joined fields
   recipe_name?: string;

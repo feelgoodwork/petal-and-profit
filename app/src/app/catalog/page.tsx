@@ -19,6 +19,7 @@ interface CatalogEntry {
   min_cost: number | null;
   max_cost: number | null;
   cost_count: number;
+  pp_price: number | null;
 }
 
 interface CatalogGroup {
@@ -169,6 +170,7 @@ export default function CatalogPage() {
                             <TableHead className="pl-10">Variant</TableHead>
                             <TableHead className="text-right">Aliases</TableHead>
                             <TableHead className="text-right">Avg Cost/stem</TableHead>
+                            <TableHead className="text-right">P&P Price</TableHead>
                             <TableHead className="text-right">Range</TableHead>
                             <TableHead className="text-right">Price Points</TableHead>
                           </TableRow>
@@ -197,6 +199,13 @@ export default function CatalogPage() {
                               <TableCell className="text-right font-mono text-sm">
                                 {entry.avg_cost != null
                                   ? <span>${entry.avg_cost.toFixed(2)}<span className="text-stone-400 text-xs font-sans">/stem</span></span>
+                                  : <span className="text-stone-300">-</span>}
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-sm">
+                                {entry.pp_price != null
+                                  ? <span className={entry.avg_cost != null && entry.pp_price < entry.avg_cost ? 'text-emerald-700' : 'text-stone-500'}>
+                                      ${entry.pp_price.toFixed(2)}<span className="text-stone-400 text-xs font-sans">/stem</span>
+                                    </span>
                                   : <span className="text-stone-300">-</span>}
                               </TableCell>
                               <TableCell className="text-right font-mono text-sm text-stone-500">
@@ -230,6 +239,7 @@ export default function CatalogPage() {
                     <TableHead>Product Type</TableHead>
                     <TableHead className="text-right">Aliases</TableHead>
                     <TableHead className="text-right">Avg Cost/bunch</TableHead>
+                    <TableHead className="text-right">P&P Price</TableHead>
                     <TableHead className="text-right">Range</TableHead>
                     <TableHead className="text-right">Price Points</TableHead>
                   </TableRow>
@@ -252,6 +262,13 @@ export default function CatalogPage() {
                       <TableCell className="text-right font-mono text-sm">
                         {entry.avg_cost != null
                           ? <span>${entry.avg_cost.toFixed(2)}<span className="text-stone-400 text-xs font-sans">/bunch</span></span>
+                          : <span className="text-stone-300">-</span>}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        {entry.pp_price != null
+                          ? <span className={entry.avg_cost != null && entry.pp_price < entry.avg_cost ? 'text-emerald-700' : 'text-stone-500'}>
+                              ${entry.pp_price.toFixed(2)}<span className="text-stone-400 text-xs font-sans">/bunch</span>
+                            </span>
                           : <span className="text-stone-300">-</span>}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm text-stone-500">
