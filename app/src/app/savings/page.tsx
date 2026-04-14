@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -44,52 +45,28 @@ export default function SavingsPage() {
   const [data, setData] = useState<SavingsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState('2025-02-01');
+  const [endDate, setEndDate] = useState('2025-03-31');
 
-  useEffect(() => {
-    fetch('/api/savings?start=2026-02-01&end=2026-03-31&min_pct=10')
-      .then(r => r.json())
-      .then(d => {
-        if (d.error) setError(d.error);
-        else setData(d);
-      })
-      .catch(() => setError('Failed to load savings data'))
-      .finally(() => setLoading(false));
-  }, []);
+  const fetchSavings = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/savings?start=${startDate}&end=${endDate}&min_pct=10`);
+      const d = await res.json();
+      if (d.error) setError(d.error);
+      else setData(d);
+    } catch {
+      setError('Failed to load savings data');
+    } finally {
+      setLoading(false);
+    }
+  }, [startDate, endDate]);
 
-  if (loading) {
-    return (
-      <div className="p-8 text-center text-stone-400">Loading savings analysis...</div>
-    );
-  }
+  useEffect(() => { fetchSavings(); }, [fetchSavings]);
 
-  if (error) {
-    return (
-      <div className="p-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
-  if (!data || data.items.length === 0) {
-    return (
-      <div className="p-8">
-        <h1 className="text-2xl font-semibold text-stone-900 mb-2">P&P Savings Analysis</h1>
-        <p className="text-stone-500 mb-6">Feb &ndash; Mar 2026</p>
-        <div className="text-center py-16 text-stone-400 bg-white border rounded-lg">
-          <p className="text-lg mb-2">No savings opportunities found</p>
-          <p className="text-sm">
-            No wholesale benchmark data loaded yet. Contact your P&P rep to get started.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const { summary, items } = data;
-  const flowers = items.filter(i => i.category === 'flower');
-  const foliage = items.filter(i => i.category === 'foliage');
+  const flowers = data?.items.filter(i => i.category === 'flower') ?? [];
+  const foliage = data?.items.filter(i => i.category === 'foliage') ?? [];
 
   return (
     <div className="p-8 max-w-6xl">
@@ -98,65 +75,114 @@ export default function SavingsPage() {
           Petal &amp; Profit Savings Analysis
         </h1>
         <p className="text-sm text-stone-500 mt-1">
-          Feb &ndash; Mar 2026 &middot; Showing flower types where P&P pricing saves at least 10%
+          Compare what you paid vs what you would pay through Petal &amp; Profit
         </p>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-xs text-stone-400 uppercase tracking-wider">What You Paid</p>
-          <p className="text-2xl font-semibold text-stone-900 mt-1">
-            {formatCurrency(summary.total_actual_cost)}
-          </p>
+      {/* Date range controls */}
+      <div className="flex items-end gap-4 mb-6">
+        <div>
+          <label className="block text-xs text-stone-500 mb-1">Start Date</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+            className="border rounded px-3 py-1.5 text-sm"
+          />
         </div>
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-xs text-stone-400 uppercase tracking-wider">P&P Price Would Be</p>
-          <p className="text-2xl font-semibold text-emerald-700 mt-1">
-            {formatCurrency(summary.total_pp_cost)}
-          </p>
+        <div>
+          <label className="block text-xs text-stone-500 mb-1">End Date</label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={e => setEndDate(e.target.value)}
+            className="border rounded px-3 py-1.5 text-sm"
+          />
         </div>
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-          <p className="text-xs text-emerald-600 uppercase tracking-wider">Total Savings</p>
-          <p className="text-2xl font-semibold text-emerald-700 mt-1">
-            {formatCurrency(summary.total_savings)}
-          </p>
-        </div>
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-          <p className="text-xs text-emerald-600 uppercase tracking-wider">Overall Savings</p>
-          <p className="text-2xl font-semibold text-emerald-700 mt-1">
-            {summary.overall_savings_pct}%
-          </p>
-          <p className="text-xs text-stone-500 mt-0.5">
-            across {summary.flower_types_compared} flower types
-          </p>
-        </div>
+        <Button onClick={fetchSavings} variant="outline" size="sm" disabled={loading}>
+          {loading ? 'Loading...' : 'Update'}
+        </Button>
+        <p className="text-xs text-stone-400 ml-2">Only showing flower types with 10%+ savings</p>
       </div>
 
-      {/* Flowers table */}
-      {flowers.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wider mb-2">
-            Flowers &mdash; {flowers.length} types with savings
-          </h2>
-          <SavingsTable items={flowers} />
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 mb-6">
+          {error}
         </div>
       )}
 
-      {/* Foliage table */}
-      {foliage.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wider mb-2">
-            Foliage &amp; Greenery &mdash; {foliage.length} types with savings
-          </h2>
-          <SavingsTable items={foliage} />
+      {loading && (
+        <div className="text-center py-8 text-stone-400">Loading savings analysis...</div>
+      )}
+
+      {!loading && !error && (!data || data.items.length === 0) && (
+        <div className="text-center py-16 text-stone-400 bg-white border rounded-lg">
+          <p className="text-lg mb-2">No savings opportunities found</p>
+          <p className="text-sm">
+            No invoice cost data in the selected date range, or no P&P benchmark data loaded yet.
+          </p>
         </div>
       )}
 
-      <p className="text-xs text-stone-400 mt-4">
-        P&P pricing = wholesale cost + 20% markup.
-        Only showing types where current vendor cost exceeds P&P price by 10% or more.
-      </p>
+      {!loading && data && data.items.length > 0 && (
+        <>
+          {/* Summary cards */}
+          <div className="grid grid-cols-4 gap-4 mb-8">
+            <div className="bg-white border rounded-lg p-4">
+              <p className="text-xs text-stone-400 uppercase tracking-wider">What You Paid</p>
+              <p className="text-2xl font-semibold text-stone-900 mt-1">
+                {formatCurrency(data.summary.total_actual_cost)}
+              </p>
+            </div>
+            <div className="bg-white border rounded-lg p-4">
+              <p className="text-xs text-stone-400 uppercase tracking-wider">P&P Price Would Be</p>
+              <p className="text-2xl font-semibold text-emerald-700 mt-1">
+                {formatCurrency(data.summary.total_pp_cost)}
+              </p>
+            </div>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <p className="text-xs text-emerald-600 uppercase tracking-wider">Total Savings</p>
+              <p className="text-2xl font-semibold text-emerald-700 mt-1">
+                {formatCurrency(data.summary.total_savings)}
+              </p>
+            </div>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <p className="text-xs text-emerald-600 uppercase tracking-wider">Overall Savings</p>
+              <p className="text-2xl font-semibold text-emerald-700 mt-1">
+                {data.summary.overall_savings_pct}%
+              </p>
+              <p className="text-xs text-stone-500 mt-0.5">
+                across {data.summary.flower_types_compared} flower types
+              </p>
+            </div>
+          </div>
+
+          {/* Flowers table */}
+          {flowers.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wider mb-2">
+                Flowers &mdash; {flowers.length} types with savings
+              </h2>
+              <SavingsTable items={flowers} />
+            </div>
+          )}
+
+          {/* Foliage table */}
+          {foliage.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wider mb-2">
+                Foliage &amp; Greenery &mdash; {foliage.length} types with savings
+              </h2>
+              <SavingsTable items={foliage} />
+            </div>
+          )}
+
+          <p className="text-xs text-stone-400 mt-4">
+            P&P pricing = wholesale cost + 20% markup.
+            Only showing types where current vendor cost exceeds P&P price by 10% or more.
+          </p>
+        </>
+      )}
     </div>
   );
 }

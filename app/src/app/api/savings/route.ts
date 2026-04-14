@@ -2,44 +2,61 @@ import { getDb } from '@/lib/db';
 import type { NextRequest } from 'next/server';
 
 /**
- * GET /api/savings?start=2026-02-01&end=2026-03-31
+ * GET /api/savings?start=2025-02-01&end=2025-03-31
  *
  * Compares actual invoice costs (from ingredient_costs) against
  * wholesale_benchmarks P&P pricing for the given date range.
  * Only returns flower types with >= 10% cost improvement.
+ *
+ * Handles messy date formats: MM/DD/YYYY, MM/DD/YY, and YYYY-MM-DD.
  */
 export async function GET(request: NextRequest) {
   try {
     const sql = getDb();
     const { searchParams } = new URL(request.url);
-    const start = searchParams.get('start') || '2026-02-01';
-    const end = searchParams.get('end') || '2026-03-31';
+    const start = searchParams.get('start') || '2025-02-01';
+    const end = searchParams.get('end') || '2025-03-31';
     const minSavingsPct = Number(searchParams.get('min_pct') || '10');
 
-    // 1. Get actual costs per flower type in the date range
-    //    Join through flower_catalog to get base_type for fallback matching
+    // Parse invoice_date (stored as TEXT in various formats) into a comparable date
+    // using Postgres string functions. We normalize to YYYY-MM-DD for comparison.
     const actualCosts = await sql`
+      WITH parsed_costs AS (
+        SELECT ic.*,
+          fc.canonical_name,
+          fc.base_type,
+          fc.category,
+          CASE
+            -- YYYY-MM-DD format (already good)
+            WHEN ic.invoice_date ~ '^\d{4}-\d{2}-\d{2}' THEN ic.invoice_date::date
+            -- MM/DD/YYYY format
+            WHEN ic.invoice_date ~ '^\d{1,2}/\d{1,2}/\d{4}$' THEN TO_DATE(ic.invoice_date, 'MM/DD/YYYY')
+            -- MM/DD/YY format
+            WHEN ic.invoice_date ~ '^\d{1,2}/\d{1,2}/\d{2}$' THEN TO_DATE(ic.invoice_date, 'MM/DD/YY')
+            ELSE NULL
+          END as parsed_date
+        FROM ingredient_costs ic
+        JOIN flower_catalog fc ON ic.flower_id = fc.id
+        WHERE ic.invoice_date IS NOT NULL
+      )
       SELECT
-        fc.canonical_name,
-        fc.base_type,
-        fc.category,
-        ic.cost_per as unit_type,
+        canonical_name,
+        base_type,
+        category,
+        cost_per as unit_type,
         COUNT(*)::int as purchase_count,
-        SUM(ic.unit_cost)::numeric as total_cost,
-        AVG(ic.unit_cost)::numeric as avg_cost_per_unit,
-        MIN(ic.unit_cost)::numeric as min_cost,
-        MAX(ic.unit_cost)::numeric as max_cost,
-        SUM(CASE WHEN ic.cost_per = 'stem' THEN 1 ELSE 0 END)::int as stem_count,
-        SUM(CASE WHEN ic.cost_per = 'bunch' THEN 1 ELSE 0 END)::int as bunch_count
-      FROM ingredient_costs ic
-      JOIN flower_catalog fc ON ic.flower_id = fc.id
-      WHERE ic.invoice_date >= ${start}
-        AND ic.invoice_date <= ${end}
-      GROUP BY fc.canonical_name, fc.base_type, fc.category, ic.cost_per
-      ORDER BY fc.canonical_name
+        SUM(unit_cost)::numeric as total_cost,
+        AVG(unit_cost)::numeric as avg_cost_per_unit,
+        MIN(unit_cost)::numeric as min_cost,
+        MAX(unit_cost)::numeric as max_cost
+      FROM parsed_costs
+      WHERE parsed_date >= ${start}::date
+        AND parsed_date <= ${end}::date
+      GROUP BY canonical_name, base_type, category, cost_per
+      ORDER BY canonical_name
     `;
 
-    // 2. Get all wholesale benchmarks (keyed by catalog_type and base_type)
+    // Get all wholesale benchmarks
     const benchmarks = await sql`
       SELECT catalog_type, base_type, unit_type,
         MIN(price_per_unit) as best_price,
@@ -49,7 +66,7 @@ export async function GET(request: NextRequest) {
       GROUP BY catalog_type, base_type, unit_type, vendor_slug, vendor_name
     `;
 
-    // Build lookup: catalog_type → best price, and base_type → best price (fallback)
+    // Build lookup maps
     const benchByType = new Map<string, { price: number; ppPrice: number; vendor: string; unitType: string }>();
     const benchByBase = new Map<string, { price: number; ppPrice: number; vendor: string; unitType: string }>();
 
@@ -74,7 +91,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 3. Compare and compute savings
+    // Compare and compute savings
     interface SavingsRow {
       flower_type: string;
       base_type: string | null;
@@ -101,7 +118,6 @@ export async function GET(request: NextRequest) {
       const totalCost = Number(row.total_cost);
       const count = Number(row.purchase_count);
 
-      // Find best benchmark: exact catalog_type first, then base_type fallback
       let bench = benchByType.get(canonicalName);
       let matchType = 'exact';
       if (!bench && baseType) {
@@ -117,7 +133,6 @@ export async function GET(request: NextRequest) {
       const totalSavings = totalCost - totalPpCost;
       const savingsPct = avgCost > 0 ? (savingsPerUnit / avgCost) * 100 : 0;
 
-      // Only include if savings >= threshold (positive = you save money)
       if (savingsPct >= minSavingsPct) {
         savings.push({
           flower_type: canonicalName,
@@ -138,10 +153,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Sort by total savings descending
     savings.sort((a, b) => b.total_savings - a.total_savings);
 
-    // Summary stats
     const totalActual = savings.reduce((s, r) => s + r.total_actual_cost, 0);
     const totalPp = savings.reduce((s, r) => s + r.total_pp_cost, 0);
     const totalSaved = savings.reduce((s, r) => s + r.total_savings, 0);
