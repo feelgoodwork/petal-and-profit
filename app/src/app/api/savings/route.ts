@@ -1,175 +1,213 @@
 import { getDb } from '@/lib/db';
-import type { NextRequest } from 'next/server';
 
 /**
- * GET /api/savings?start=2025-02-01&end=2025-03-31
+ * GET /api/savings
  *
- * Compares actual invoice costs (from ingredient_costs) against
- * wholesale_benchmarks P&P pricing for the given date range.
- * Only returns flower types with >= 10% cost improvement.
+ * Sales-driven savings analysis: looks at what arrangements Uptowne sold
+ * in 2026, calculates the flower cost using historical avg costs,
+ * then compares against P&P wholesale pricing.
  *
- * Handles messy date formats: MM/DD/YYYY, MM/DD/YY, and YYYY-MM-DD.
+ * Shows per-arrangement breakdown: current cost vs P&P cost, and where
+ * buying through P&P would improve profitability by 10%+ on flower cost.
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const sql = getDb();
-    const { searchParams } = new URL(request.url);
-    const start = searchParams.get('start') || '2025-02-01';
-    const end = searchParams.get('end') || '2025-03-31';
-    const minSavingsPct = Number(searchParams.get('min_pct') || '10');
 
-    // Parse invoice_date (stored as TEXT in various formats) into a comparable date
-    // using Postgres string functions. We normalize to YYYY-MM-DD for comparison.
-    const actualCosts = await sql`
-      WITH parsed_costs AS (
-        SELECT ic.*,
-          fc.canonical_name,
-          fc.base_type,
-          fc.category,
-          CASE
-            -- YYYY-MM-DD format (already good)
-            WHEN ic.invoice_date ~ '^\d{4}-\d{2}-\d{2}' THEN ic.invoice_date::date
-            -- MM/DD/YYYY format
-            WHEN ic.invoice_date ~ '^\d{1,2}/\d{1,2}/\d{4}$' THEN TO_DATE(ic.invoice_date, 'MM/DD/YYYY')
-            -- MM/DD/YY format
-            WHEN ic.invoice_date ~ '^\d{1,2}/\d{1,2}/\d{2}$' THEN TO_DATE(ic.invoice_date, 'MM/DD/YY')
-            ELSE NULL
-          END as parsed_date
-        FROM ingredient_costs ic
-        JOIN flower_catalog fc ON ic.flower_id = fc.id
-        WHERE ic.invoice_date IS NOT NULL
-      )
-      SELECT
-        canonical_name,
-        base_type,
-        category,
-        cost_per as unit_type,
-        COUNT(*)::int as purchase_count,
-        SUM(unit_cost)::numeric as total_cost,
-        AVG(unit_cost)::numeric as avg_cost_per_unit,
-        MIN(unit_cost)::numeric as min_cost,
-        MAX(unit_cost)::numeric as max_cost
-      FROM parsed_costs
-      WHERE parsed_date >= ${start}::date
-        AND parsed_date <= ${end}::date
-      GROUP BY canonical_name, base_type, category, cost_per
-      ORDER BY canonical_name
+    // 1. Get all 2026 sales matched to recipes, with times sold
+    const salesByRecipe = await sql`
+      SELECT recipe_id, COUNT(*)::int as times_sold, SUM(amount)::numeric as total_revenue
+      FROM sales
+      WHERE order_date LIKE '%2026%'
+        AND recipe_id IS NOT NULL
+      GROUP BY recipe_id
     `;
 
-    // Get all wholesale benchmarks
+    if (salesByRecipe.length === 0) {
+      return Response.json({ summary: null, items: [] });
+    }
+
+    // 2. Load avg cost per flower_id (all dates)
+    const costRows = await sql`
+      SELECT flower_id, AVG(unit_cost)::numeric as avg_cost
+      FROM ingredient_costs
+      GROUP BY flower_id
+    `;
+    const avgCostByFlower = new Map<number, number>();
+    for (const r of costRows) {
+      avgCostByFlower.set(Number(r.flower_id), Number(r.avg_cost));
+    }
+
+    // 3. Load P&P benchmark prices: catalog_type → pp_price, base_type → pp_price
     const benchmarks = await sql`
-      SELECT catalog_type, base_type, unit_type,
-        MIN(price_per_unit) as best_price,
-        MIN(pp_price) as best_pp_price,
-        vendor_slug, vendor_name
+      SELECT catalog_type, base_type, MIN(pp_price)::numeric as pp_price
       FROM wholesale_benchmarks
-      GROUP BY catalog_type, base_type, unit_type, vendor_slug, vendor_name
+      GROUP BY catalog_type, base_type
     `;
-
-    // Build lookup maps
-    const benchByType = new Map<string, { price: number; ppPrice: number; vendor: string; unitType: string }>();
-    const benchByBase = new Map<string, { price: number; ppPrice: number; vendor: string; unitType: string }>();
-
+    const ppByType = new Map<string, number>();
+    const ppByBase = new Map<string, number>();
     for (const b of benchmarks) {
-      const entry = {
-        price: Number(b.best_price),
-        ppPrice: Number(b.best_pp_price),
-        vendor: String(b.vendor_name),
-        unitType: String(b.unit_type),
-      };
+      const pp = Number(b.pp_price);
       if (b.catalog_type) {
-        const key = String(b.catalog_type);
-        if (!benchByType.has(key) || entry.ppPrice < benchByType.get(key)!.ppPrice) {
-          benchByType.set(key, entry);
-        }
+        const k = String(b.catalog_type);
+        if (!ppByType.has(k) || pp < ppByType.get(k)!) ppByType.set(k, pp);
       }
       if (b.base_type) {
-        const key = String(b.base_type);
-        if (!benchByBase.has(key) || entry.ppPrice < benchByBase.get(key)!.ppPrice) {
-          benchByBase.set(key, entry);
-        }
+        const k = String(b.base_type);
+        if (!ppByBase.has(k) || pp < ppByBase.get(k)!) ppByBase.set(k, pp);
       }
     }
 
-    // Compare and compute savings
-    interface SavingsRow {
-      flower_type: string;
-      base_type: string | null;
+    // 4. Load flower catalog for name/base_type lookup
+    const catalog = await sql`SELECT id, canonical_name, base_type FROM flower_catalog`;
+    const catalogById = new Map<number, { name: string; baseType: string | null }>();
+    for (const c of catalog) {
+      catalogById.set(Number(c.id), {
+        name: String(c.canonical_name),
+        baseType: c.base_type ? String(c.base_type) : null,
+      });
+    }
+
+    // 5. Load recipe names and sell prices
+    const recipes = await sql`
+      SELECT r.id, r.name, r.sell_price, rc.name as category_name
+      FROM recipes r
+      JOIN recipe_categories rc ON r.category_id = rc.id
+    `;
+    const recipeMap = new Map<number, { name: string; sellPrice: number; category: string }>();
+    for (const r of recipes) {
+      recipeMap.set(Number(r.id), {
+        name: String(r.name),
+        sellPrice: Number(r.sell_price),
+        category: String(r.category_name),
+      });
+    }
+
+    // 6. For each sold recipe, compute current cost vs P&P cost
+    interface ArrangementSavings {
+      recipe_id: number;
+      recipe_name: string;
       category: string;
-      unit_type: string;
-      purchase_count: number;
-      avg_actual_cost: number;
-      total_actual_cost: number;
-      pp_price_per_unit: number;
-      total_pp_cost: number;
-      savings_per_unit: number;
+      sell_price: number;
+      times_sold: number;
+      total_revenue: number;
+      current_flower_cost: number;
+      pp_flower_cost: number;
+      current_margin_pct: number;
+      pp_margin_pct: number;
+      savings_per_arrangement: number;
       total_savings: number;
       savings_pct: number;
-      benchmark_vendor: string;
-      match_type: string;
+      ingredients_costed: number;
+      ingredients_total: number;
+      pp_ingredients_costed: number;
     }
 
-    const savings: SavingsRow[] = [];
+    const results: ArrangementSavings[] = [];
 
-    for (const row of actualCosts) {
-      const canonicalName = String(row.canonical_name);
-      const baseType = row.base_type ? String(row.base_type) : null;
-      const avgCost = Number(row.avg_cost_per_unit);
-      const totalCost = Number(row.total_cost);
-      const count = Number(row.purchase_count);
+    // Batch-load all ingredients for sold recipes
+    const recipeIds = salesByRecipe.map(s => Number(s.recipe_id));
+    const allIngredients = await sql`
+      SELECT recipe_id, flower_id, quantity, ingredient_name
+      FROM recipe_ingredients
+      WHERE recipe_id = ANY(${recipeIds})
+    `;
 
-      let bench = benchByType.get(canonicalName);
-      let matchType = 'exact';
-      if (!bench && baseType) {
-        bench = benchByBase.get(baseType);
-        matchType = 'base_type';
-      }
-
-      if (!bench) continue;
-
-      const ppPricePerUnit = bench.ppPrice;
-      const totalPpCost = ppPricePerUnit * count;
-      const savingsPerUnit = avgCost - ppPricePerUnit;
-      const totalSavings = totalCost - totalPpCost;
-      const savingsPct = avgCost > 0 ? (savingsPerUnit / avgCost) * 100 : 0;
-
-      if (savingsPct >= minSavingsPct) {
-        savings.push({
-          flower_type: canonicalName,
-          base_type: baseType,
-          category: String(row.category || 'flower'),
-          unit_type: String(row.unit_type || 'stem'),
-          purchase_count: count,
-          avg_actual_cost: +avgCost.toFixed(4),
-          total_actual_cost: +totalCost.toFixed(2),
-          pp_price_per_unit: +ppPricePerUnit.toFixed(4),
-          total_pp_cost: +totalPpCost.toFixed(2),
-          savings_per_unit: +savingsPerUnit.toFixed(4),
-          total_savings: +totalSavings.toFixed(2),
-          savings_pct: +savingsPct.toFixed(1),
-          benchmark_vendor: bench.vendor,
-          match_type: matchType,
-        });
-      }
+    // Group ingredients by recipe
+    const ingredientsByRecipe = new Map<number, Array<{ flowerId: number | null; qty: number; name: string }>>();
+    for (const ing of allIngredients) {
+      const rid = Number(ing.recipe_id);
+      if (!ingredientsByRecipe.has(rid)) ingredientsByRecipe.set(rid, []);
+      ingredientsByRecipe.get(rid)!.push({
+        flowerId: ing.flower_id != null ? Number(ing.flower_id) : null,
+        qty: Number(ing.quantity) || 1,
+        name: String(ing.ingredient_name),
+      });
     }
 
-    savings.sort((a, b) => b.total_savings - a.total_savings);
+    for (const sale of salesByRecipe) {
+      const recipeId = Number(sale.recipe_id);
+      const timesSold = Number(sale.times_sold);
+      const totalRevenue = Number(sale.total_revenue);
+      const recipe = recipeMap.get(recipeId);
+      if (!recipe) continue;
 
-    const totalActual = savings.reduce((s, r) => s + r.total_actual_cost, 0);
-    const totalPp = savings.reduce((s, r) => s + r.total_pp_cost, 0);
-    const totalSaved = savings.reduce((s, r) => s + r.total_savings, 0);
+      const ingredients = ingredientsByRecipe.get(recipeId) || [];
+      let currentCost = 0;
+      let ppCost = 0;
+      let ingredientsCosted = 0;
+      let ppIngredientsCosted = 0;
+      const ingredientsTotal = ingredients.length;
+
+      for (const ing of ingredients) {
+        if (!ing.flowerId) continue;
+
+        const avgCost = avgCostByFlower.get(ing.flowerId);
+        if (avgCost != null) {
+          currentCost += ing.qty * avgCost;
+          ingredientsCosted++;
+        }
+
+        const cat = catalogById.get(ing.flowerId);
+        if (cat) {
+          const ppPrice = ppByType.get(cat.name) ?? (cat.baseType ? ppByBase.get(cat.baseType) : undefined);
+          if (ppPrice != null) {
+            ppCost += ing.qty * ppPrice;
+            ppIngredientsCosted++;
+          }
+        }
+      }
+
+      // Only include if we have both costs to compare
+      if (currentCost <= 0 || ppCost <= 0) continue;
+
+      const savingsPerArr = currentCost - ppCost;
+      const savingsPct = (savingsPerArr / currentCost) * 100;
+
+      // Only show where P&P saves at least 10%
+      if (savingsPct < 10) continue;
+
+      const currentMarginPct = ((recipe.sellPrice - currentCost) / recipe.sellPrice) * 100;
+      const ppMarginPct = ((recipe.sellPrice - ppCost) / recipe.sellPrice) * 100;
+
+      results.push({
+        recipe_id: recipeId,
+        recipe_name: recipe.name,
+        category: recipe.category,
+        sell_price: recipe.sellPrice,
+        times_sold: timesSold,
+        total_revenue: +totalRevenue.toFixed(2),
+        current_flower_cost: +currentCost.toFixed(2),
+        pp_flower_cost: +ppCost.toFixed(2),
+        current_margin_pct: +currentMarginPct.toFixed(1),
+        pp_margin_pct: +ppMarginPct.toFixed(1),
+        savings_per_arrangement: +savingsPerArr.toFixed(2),
+        total_savings: +(savingsPerArr * timesSold).toFixed(2),
+        savings_pct: +savingsPct.toFixed(1),
+        ingredients_costed: ingredientsCosted,
+        ingredients_total: ingredientsTotal,
+        pp_ingredients_costed: ppIngredientsCosted,
+      });
+    }
+
+    results.sort((a, b) => b.total_savings - a.total_savings);
+
+    const totalCurrentCost = results.reduce((s, r) => s + r.current_flower_cost * r.times_sold, 0);
+    const totalPpCost = results.reduce((s, r) => s + r.pp_flower_cost * r.times_sold, 0);
+    const totalSavings = results.reduce((s, r) => s + r.total_savings, 0);
+    const totalRevenue = results.reduce((s, r) => s + r.total_revenue, 0);
 
     return Response.json({
-      date_range: { start, end },
-      min_savings_pct: minSavingsPct,
       summary: {
-        flower_types_compared: savings.length,
-        total_actual_cost: +totalActual.toFixed(2),
-        total_pp_cost: +totalPp.toFixed(2),
-        total_savings: +totalSaved.toFixed(2),
-        overall_savings_pct: totalActual > 0 ? +((totalSaved / totalActual) * 100).toFixed(1) : 0,
+        arrangements_compared: results.length,
+        total_times_sold: results.reduce((s, r) => s + r.times_sold, 0),
+        total_revenue: +totalRevenue.toFixed(2),
+        total_current_flower_cost: +totalCurrentCost.toFixed(2),
+        total_pp_flower_cost: +totalPpCost.toFixed(2),
+        total_savings: +totalSavings.toFixed(2),
+        overall_savings_pct: totalCurrentCost > 0 ? +((totalSavings / totalCurrentCost) * 100).toFixed(1) : 0,
       },
-      items: savings,
+      items: results,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
