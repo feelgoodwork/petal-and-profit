@@ -72,10 +72,17 @@ async function main() {
   fs.mkdirSync(TEMP_DIR, { recursive: true });
 
   const anthropic = new Anthropic();
-  const client = new Client({ connectionString: process.env.DATABASE_URL, keepAlive: true });
-  await client.connect();
 
+  async function getClient() {
+    const c = new Client({ connectionString: process.env.DATABASE_URL, keepAlive: true, keepAliveInitialDelayMillis: 10000 });
+    await c.connect();
+    return c;
+  }
+
+  let client = await getClient();
   const { rows: recipes } = await client.query('SELECT id, name FROM recipes');
+  await client.end();
+
   const fuse = new Fuse(recipes, { keys: ['name'], threshold: 0.35, includeScore: true });
   console.log('Recipes loaded:', recipes.length);
 
@@ -195,8 +202,9 @@ Return ONLY the JSON, no other text.` }
     if (pageNum < endPage) await new Promise(r => setTimeout(r, 300));
   }
 
-  // Update DB
-  if (!DRY_RUN && totalMatched > 0) {
+  // Update DB (reconnect fresh)
+  if (!DRY_RUN) {
+    client = await getClient();
     await client.query('ALTER TABLE recipes ADD COLUMN IF NOT EXISTS image_url TEXT');
     const imageFiles = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.jpg'));
     let updated = 0;
@@ -208,14 +216,13 @@ Return ONLY the JSON, no other text.` }
       }
     }
     console.log('\nUpdated image_url for', updated, 'recipes');
+    await client.end();
   }
 
   console.log('\n=== Summary ===');
   console.log('Recipes found:', totalExtracted);
   console.log('Images saved:', totalMatched);
   console.log('Skipped:', totalSkipped);
-
-  await client.end();
 }
 
 main().catch(e => { console.error('Failed:', e.message); process.exit(1); });
