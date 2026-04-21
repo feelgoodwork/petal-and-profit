@@ -54,9 +54,14 @@ export default function AdminStoresPage() {
             {stores ? `${stores.length} store${stores.length === 1 ? '' : 's'} registered` : 'Loading…'}
           </p>
         </div>
-        <Link href="/admin/stores/new">
-          <Button>+ Add new store</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/data-quality">
+            <Button variant="outline">Data quality</Button>
+          </Link>
+          <Link href="/admin/stores/new">
+            <Button>+ Add new store</Button>
+          </Link>
+        </div>
       </div>
 
       {stores && stores.length === 0 && (

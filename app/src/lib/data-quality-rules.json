@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "updated_at": "2026-04-21",
+  "notes": "Institutional memory for data-quality rules discovered during cleansing. Every rule should have a brief why-line so we can review and retire entries over time. Typo fixes and supply patterns are duplicated into classifier-data.js at module load (see loadRules in data-quality.ts) — edit here, not there.",
+
+  "typo_fixes": {
+    "gegera": { "to": "gerbera", "why": "misspelling in scanned invoices that caused gerbera to match 'daisy' base" },
+    "gerbera daisy": { "to": "gerbera", "why": "composite name — gerbera is the actual flower" },
+    "gerbera daisies": { "to": "gerberas", "why": "plural variant of above" },
+    "soliago": { "to": "solidago", "why": "missing 'd' — common typo in recipes" },
+    "solidgo": { "to": "solidago", "why": "dropped vowel variant" },
+    "delphinum": { "to": "delphinium", "why": "dropped 'i'" },
+    "liatrus": { "to": "liatris", "why": "vowel transposition" },
+    "liatrice": { "to": "liatris", "why": "alternate romanization" },
+    "alstromeria": { "to": "alstroemeria", "why": "dropped 'e'" },
+    "alastromeria": { "to": "alstroemeria", "why": "letter transposition" },
+    "rununculus": { "to": "ranunculus", "why": "vowel error" },
+    "monestera": { "to": "monstera", "why": "extra 'e'" },
+    "myrtl": { "to": "myrtle", "why": "dropped 'e'" },
+    "blupleurum": { "to": "bupleurum", "why": "transposed letters" }
+  },
+
+  "not_a_flower_patterns": [
+    { "pattern": "^BILL TO:", "why": "invoice header text scanned as a line item" },
+    { "pattern": "SALESMAN:", "why": "invoice metadata" },
+    { "pattern": "^TERMS:", "why": "invoice metadata" },
+    { "pattern": "^SHIP VIA:", "why": "invoice metadata" },
+    { "pattern": "^RFU ", "why": "vendor stock-keeping prefix, not a flower" },
+    { "pattern": "^POME ORDER", "why": "vendor order code" },
+    { "pattern": "MIXED OPERATIONS", "why": "vendor internal code" },
+    { "pattern": "Cardettes?", "why": "card holders, supply" },
+    { "pattern": "candy corn", "why": "seasonal decor" }
+  ],
+
+  "composite_ingredient_patterns": [
+    { "pattern": "SOLID STOCK .*ROSES.*LILY", "why": "BQF/solid-color bundle line items that mix multiple flowers" },
+    { "pattern": "^BQF ", "why": "bouquet-filler composite line" }
+  ],
+
+  "price_ceilings_per_stem": {
+    "_default": 15,
+    "standard carnations": 2.0,
+    "mini carnations": 1.5,
+    "standard roses": 6,
+    "spray roses": 4,
+    "standard gerberas": 3,
+    "mini gerberas": 2,
+    "cushion poms": 2,
+    "button poms": 2,
+    "daisy poms": 2,
+    "spider mums": 3,
+    "daisies": 2,
+    "statice": 2,
+    "solidago": 2,
+    "baby's breath": 3,
+    "gypsophila": 3,
+    "alstroemeria": 3,
+    "waxflower": 3,
+    "limonium": 3,
+    "hypericum": 3,
+    "eucalyptus": 4,
+    "ruscus": 4,
+    "leather leaf": 3,
+    "salal": 3,
+    "lilies": 6,
+    "asiatic lilies": 6,
+    "oriental lilies": 8,
+    "hydrangea": 10,
+    "peonies": 20,
+    "protea": 35,
+    "orchid": 25,
+    "calla lilies": 8,
+    "snapdragons": 4,
+    "stock": 4,
+    "tulips": 3,
+    "delphinium": 6,
+    "anemone": 4,
+    "ranunculus": 4,
+    "sunflowers": 3,
+    "bells of ireland": 6,
+    "bird of paradise": 25
+  },
+
+  "known_bunch_sizes": {
+    "standard carnations": 25,
+    "mini carnations": 10,
+    "standard roses": 25,
+    "spray roses": 10,
+    "standard gerberas": 10,
+    "mini gerberas": 10,
+    "asiatic lilies": 5,
+    "oriental lilies": 5,
+    "tulips": 10,
+    "stock": 10,
+    "alstroemeria": 10
+  }
+}

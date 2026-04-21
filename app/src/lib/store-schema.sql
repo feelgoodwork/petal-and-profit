@@ -175,6 +175,27 @@ CREATE TABLE IF NOT EXISTS fiftyflowers_benchmarks (
   captured_at   TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS data_quality_findings (
+  id            SERIAL PRIMARY KEY,
+  kind          TEXT NOT NULL,
+  severity      TEXT NOT NULL DEFAULT 'medium',
+  subject_type  TEXT,
+  subject_id    INTEGER,
+  summary       TEXT NOT NULL,
+  details       JSONB NOT NULL DEFAULT '{}'::jsonb,
+  suggested_fix TEXT,
+  rule_snippet  TEXT,
+  status        TEXT NOT NULL DEFAULT 'open',
+  resolved_at   TIMESTAMPTZ,
+  resolved_by   INTEGER,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS dq_findings_status_idx ON data_quality_findings(status);
+CREATE INDEX IF NOT EXISTS dq_findings_kind_idx ON data_quality_findings(kind);
+CREATE UNIQUE INDEX IF NOT EXISTS dq_findings_dedupe_idx
+  ON data_quality_findings (kind, subject_type, subject_id)
+  WHERE subject_id IS NOT NULL AND status = 'open';
+
 -- Defensive ADD-COLUMN statements for DBs that were created before the
 -- consolidated schema landed. No-ops on fresh installs.
 ALTER TABLE ingredient_costs    ADD COLUMN IF NOT EXISTS parsed_date DATE;
