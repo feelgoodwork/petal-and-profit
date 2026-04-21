@@ -34,6 +34,7 @@ export default function RootLayout({
           <a href="/recipes" className="text-sm text-stone-500 hover:text-stone-900">Recipes</a>
           <a href="/catalog" className="text-sm text-stone-500 hover:text-stone-900">Catalog</a>
           <a href="/matching" className="text-sm text-stone-500 hover:text-stone-900">Matching</a>
+          <a href="/matching/recipes" className="text-sm text-stone-500 hover:text-stone-900">Recipe Review</a>
           <a href="/profitability" className="text-sm text-stone-500 hover:text-stone-900">Profitability</a>
           <a href="/sales" className="text-sm text-stone-500 hover:text-stone-900">Sales</a>
           <a href="/vendors" className="text-sm text-stone-500 hover:text-stone-900">Vendors</a>
