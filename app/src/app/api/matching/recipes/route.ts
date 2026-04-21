@@ -14,6 +14,8 @@ export async function GET() {
       fc.canonical_name AS suggested_canonical,
       fc.category AS suggested_category,
       r.name AS recipe_name,
+      rc.name AS category_name,
+      rc.source_file AS source_file,
       (SELECT STRING_AGG(DISTINCT ri2.ingredient_name, ', ')
          FROM recipe_ingredients ri2
          WHERE ri2.recipe_id = ri.recipe_id
@@ -24,6 +26,7 @@ export async function GET() {
     FROM recipe_ingredients ri
     LEFT JOIN flower_catalog fc ON fc.id = ri.flower_id
     JOIN recipes r ON r.id = ri.recipe_id
+    LEFT JOIN recipe_categories rc ON rc.id = r.category_id
     WHERE (ri.flower_id IS NULL AND COALESCE(ri.match_status, 'pending') NOT IN ('non_ingredient', 'rejected'))
        OR ri.match_status IN ('fuzzy_suggested', 'claude_suggested')
     ORDER BY
