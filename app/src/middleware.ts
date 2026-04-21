@@ -27,6 +27,7 @@ export async function middleware(request: NextRequest) {
   if (
     pathname === '/api/login' ||
     pathname === '/api/logout' ||
+    pathname === '/api/session' ||
     pathname.startsWith('/api/usda/sync') ||
     pathname.startsWith('/api/fiftyflowers')
   ) {
