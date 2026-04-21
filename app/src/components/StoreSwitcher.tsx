@@ -52,6 +52,9 @@ export function StoreSwitcher() {
 
   return (
     <div className="ml-auto flex items-center gap-3 text-xs">
+      {info.user.is_superadmin && (
+        <a href="/admin/stores" className="text-purple-700 hover:underline">Admin</a>
+      )}
       {showSwitcher && (
         <select
           value={info.active_store?.id ?? ''}
