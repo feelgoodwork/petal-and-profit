@@ -1,0 +1,320 @@
+Phase 0 audit of unmatched data
+
+Recipe ingredients total: 4526 | unmatched: 1086 (24.0%)
+
+=== RECIPE INGREDIENTS ===
+Distinct names: 406 | Total unmatched rows: 1086
+
+Category                                                   Distinct   Rows     Share
+------------------------------------------------------------------------------------------
+Dictionary gap (real flower/foliage not in classifier)     80         426      39.2%
+Generic "lily/lilies" with no subtype qualifier            33         149      13.7%
+Orphan fragment (PDF line-break split residue)             32         91       8.4%
+Known typo                                                 1          6        0.6%
+Non-flower supply miscategorized                           31         66       6.1%
+Long tail (obscure, one-offs, or genuine unknowns)         229        348      32.0%
+
+--- Top 20 per category: RECIPE INGREDIENTS ---
+
+[dictionary_gap] Dictionary gap (real flower/foliage not in classifier) (80 distinct, 426 rows)
+  50    bells of Ireland
+  41    ivy
+  20    sword fern
+  19    variegated aspidistra
+  18    bupleurum
+  18    jade
+  16    galax
+  15    Bells of Ireland
+  14    aspidistra leaves
+  13    galax leaves
+  13    Ivy
+  12    Aspidistra
+  10    curly willow
+  10    Dusty Miller
+  9     huckleberry
+  8     aspidistra leaf
+  8     hosta leaves
+  7     star of Bethlehem
+  7     variegated aspidistra leaf
+  7     Safari Sunset leucadendron
+
+[generic_lily] Generic "lily/lilies" with no subtype qualifier (33 distinct, 149 rows)
+  16    white lilies
+  15    yellow lilies
+  15    lily grass
+  13    Lily Grass
+  8     orange lilies
+  8     white Lilies
+  7     pale pink lilies
+  6     White Lilies
+  5     lily
+  5     Orange Lilies
+  5     pink lilies
+  4     Yellow Lilies
+  4     light pink lilies
+  4     pink & white lilies
+  3     Light Pink Lilies
+  3     peach Lilies
+  3     red & white lilies
+  3     hot pink & white lilies
+  3     hot pink and white lilies
+  2     Pink Lilies
+
+[orphan_fragment] Orphan fragment (PDF line-break split residue) (32 distinct, 91 rows)
+  22    variegated
+  12    leaf
+  7     grass
+  7     leaves
+  5     lavender 'Monte
+  5     Variegated
+  3     purple 'Monte
+  3     rust chrysanthemums ('Red
+  2     10" silver taper candles
+  2     seeded
+  2     Green
+  1     yellow 'Black Eyed
+  1     'Baby
+  1     1/2" fuchsia square plastic container
+  1     1/2" square black plastic container
+  1     1/2" tall copper-colored ceramic vase
+  1     10" gold taper candles
+  1     10" moss green metallic taper candles
+  1     10" red metallic taper candles
+  1     10" rust taper candles
+
+[typo] Known typo (1 distinct, 6 rows)
+  6     soliago
+
+[non_flower_supply] Non-flower supply miscategorized (31 distinct, 66 rows)
+  14    teepee
+  8     Teepee
+  6     large wet floral foam cage
+  3     miniature pumpkin dried wheat fall-patterned ribbon
+  3     silver balls silver ribbon
+  3     utility container with wet floral foam
+  2     large wet floral foam cage birch branches
+  2     ft. purple #3 sheer ribbon
+  2     ft. purple #3 satin ribbon
+  2     Teepee-
+  1     oz. plastic cup with wet floral foam
+  1     red decorative aluminum wire
+  1     red millimeter balls red and green striped ribbon
+  1     red satin ribbon (to enhance
+  1     silver glitter millimeter balls silver glitter ribbon
+  1     silver ribbon
+  1     small gold millimeter balls gold ting ting gold mesh wired ribbon
+  1     small wet floral foam cages
+  1     teepee (manicured)
+  1     white lilies green, red and gold holiday ribbon
+
+[long_tail] Long tail (obscure, one-offs, or genuine unknowns) (229 distinct, 348 rows)
+  5     lotus pods
+  4     Yellow Daisy
+  4     white 'Snowflake' poms
+  4     fuchsia heather
+  4     rust 'Red Rover' chrysanthemums
+  4     'Sunset' heather
+  4     lavender heather
+  4     silver taper candles
+  4     bi-colored orange & yellow
+  4     green button mums
+  4     Variegated Mini
+  4     tinted)
+  3     purple millimeter balls
+  3     lycopodium
+  3     burnt orange taper candles
+  3     miniature pumpkins
+  3     Monstera
+  3     Emerald
+  3     acacia
+  3     pink heather
+
+
+Line items total (is_flower=1): 1750 | unmatched: 561 (32.1%)
+
+=== LINE ITEMS ===
+Distinct names: 376 | Total unmatched rows: 561
+
+Category                                                   Distinct   Rows     Share
+------------------------------------------------------------------------------------------
+Dictionary gap (real flower/foliage not in classifier)     20         50       8.9%
+Generic "lily/lilies" with no subtype qualifier            17         37       6.6%
+Orphan fragment (PDF line-break split residue)             8          8        1.4%
+Known typo                                                 1          7        1.2%
+Long tail (obscure, one-offs, or genuine unknowns)         330        459      81.8%
+
+--- Top 20 per category: LINE ITEMS ---
+
+[dictionary_gap] Dictionary gap (real flower/foliage not in classifier) (20 distinct, 50 rows)
+  13    BELLS OF IRELAND
+  7     GOLD ASTILBE
+  6     BIRD OF PARADISE
+  3     PEONIES
+  3     OREGONIA
+  2     STAR OF BETHLEHEM 60CMS WHITE
+  2     DUSTY MILLER
+  2     ASTILBE 60CMS ASSORTED
+  1     Grasses Liriope Green ( green) 50 cm
+  1     MIAF BELLS - BELLS OF IRELAND
+  1     Peony Mix
+  1     RFE BELLS OF IRELAND
+  1     SAFARI SUNSET
+  1     STAR OF BETHLEHEM
+  1     ASPIDISTRA
+  1     BELLS OF IRELAND 80CMS BELLS OF IRELAND
+  1     BELLS OF IRELAND 90CMS BELLS OF IRELAND
+  1     BUPLEURUM
+  1     DIANTHUS 45CMS GREEN TRICK
+  1     DIANTHUS PINK DANCER
+
+[generic_lily] Generic "lily/lilies" with no subtype qualifier (17 distinct, 37 rows)
+  10    STAR GAZER LILY
+  4     LA LILIES Assorted2-3BL
+  4     OR LILIES ASSORETD 2-3BL
+  3     LA LILY
+  2     WHITE LA LILY
+  2     ORANGE LA LILY
+  2     LG LILY
+  1     LA LILIES Honesty (orange) 2BL
+  1     LILY ALGSTROEMERIA
+  1     LILY ASSORTED
+  1     LILY MISC
+  1     LILY OAT FURLANDO
+  1     LILY ORIENTA
+  1     LILY SALZBOURG
+  1     LR LILY
+  1     MUM/DAHLIA/LILY X 24; FALL MIX EACH
+  1     OR LILIES ASSORTED 2-3BL
+
+[orphan_fragment] Orphan fragment (PDF line-break split residue) (8 distinct, 8 rows)
+  1     12" Cardettes / 1000
+  1     18" Cardettes / 1000
+  1     4½" 1 PP POINSETTIAS
+  1     6½" 1 PP POINSETTIAS
+  1     7½" 2 PP POINSETTIAS
+  1     8½" 3 PP POINSETTIAS
+  1     9" Cardettes / 1000
+  1     BILL TO: 120916 OWNER'S NAME: JEFF FISHER SALESMAN: 9 TERMS: CASH SHIP VIA: MONTH REP NO: ENTERED BY: DSC
+
+[typo] Known typo (1 distinct, 7 rows)
+  7     LIATRUS
+
+[long_tail] Long tail (obscure, one-offs, or genuine unknowns) (330 distinct, 459 rows)
+  7     GREEN SPIDER
+  7     SPIDER
+  7     SUN FLOWER
+  6     RFU MISCOF
+  6     STATICE
+  6     LILY ORIENTAL
+  6     SILVER QUEEN PITT
+  5     RHOBELLINI
+  5     Mini Calla mix 40 CM
+  5     RFU GRIB
+  4     Playa Blanca 60 CM
+  4     Playa Blanca 50 CM
+  4     Quicksand 50 CM
+  4     MINI GERBERAS
+  4     SOLID RESC
+  4     callas Assorted Mix 50 cm
+  3     MIXED OPERATIONS
+  3     Country Home 50 cm
+  3     SOLID POME
+  3     FULL MONTY 60CM
+
+
+=== Case-variant duplicates (same name, different casing) ===
+148 groups produce redundant rows the classifier treats as distinct.
+Top 10:
+  66    unmatched rows across 3 variants of "bells of ireland"
+  54    unmatched rows across 2 variants of "ivy"
+  30    unmatched rows across 3 variants of "white lilies"
+  28    unmatched rows across 2 variants of "lily grass"
+  27    unmatched rows across 2 variants of "variegated"
+  22    unmatched rows across 2 variants of "teepee"
+  22    unmatched rows across 2 variants of "sword fern"
+  20    unmatched rows across 2 variants of "variegated aspidistra"
+  20    unmatched rows across 3 variants of "yellow lilies"
+  16    unmatched rows across 2 variants of "aspidistra leaves"
+
+CSV written: /Users/lorimercer/github/petal-and-profit/app/scripts/audit-output/unmatched-recipe-ingredients-2026-04-21T02-41-40.csv
+
+CSV written: /Users/lorimercer/github/petal-and-profit/app/scripts/audit-output/unmatched-line-items-2026-04-21T02-41-40.csv
+
+
+=== Phase 0 baseline (save these numbers to compare against after each phase) ===
+{
+  "timestamp": "2026-04-21T02:41:40.486Z",
+  "recipe_ingredients": {
+    "total": 4526,
+    "unmatched_rows": 1086,
+    "unmatched_distinct": 406,
+    "unmatched_pct": 24,
+    "by_category": {
+      "dictionary_gap": {
+        "distinct": 80,
+        "rows": 426
+      },
+      "generic_lily": {
+        "distinct": 33,
+        "rows": 149
+      },
+      "orphan_fragment": {
+        "distinct": 32,
+        "rows": 91
+      },
+      "typo": {
+        "distinct": 1,
+        "rows": 6
+      },
+      "non_flower_supply": {
+        "distinct": 31,
+        "rows": 66
+      },
+      "long_tail": {
+        "distinct": 229,
+        "rows": 348
+      },
+      "empty": {
+        "distinct": 0,
+        "rows": 0
+      }
+    }
+  },
+  "line_items": {
+    "total": 1750,
+    "unmatched_rows": 561,
+    "unmatched_distinct": 376,
+    "unmatched_pct": 32.1,
+    "by_category": {
+      "dictionary_gap": {
+        "distinct": 20,
+        "rows": 50
+      },
+      "generic_lily": {
+        "distinct": 17,
+        "rows": 37
+      },
+      "orphan_fragment": {
+        "distinct": 8,
+        "rows": 8
+      },
+      "typo": {
+        "distinct": 1,
+        "rows": 7
+      },
+      "non_flower_supply": {
+        "distinct": 0,
+        "rows": 0
+      },
+      "long_tail": {
+        "distinct": 330,
+        "rows": 459
+      },
+      "empty": {
+        "distinct": 0,
+        "rows": 0
+      }
+    }
+  },
+  "case_variant_groups": 148
+}

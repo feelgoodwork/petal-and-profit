@@ -3,6 +3,9 @@
 /data/*.db-wal
 /data/*.db-shm
 
+# Timestamped audit CSVs (baseline-phase0.txt etc. remain tracked)
+/scripts/audit-output/unmatched-*.csv
+
 # env files
 .env.local
 .env*.local
