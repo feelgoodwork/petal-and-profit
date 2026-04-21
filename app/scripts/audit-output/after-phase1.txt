@@ -1,0 +1,194 @@
+Phase 0 audit of unmatched data
+
+Recipe ingredients total: 4526 | unmatched: 263 (5.8%)
+
+=== RECIPE INGREDIENTS ===
+Distinct names: 158 | Total unmatched rows: 263
+
+Category                                                   Distinct   Rows     Share
+------------------------------------------------------------------------------------------
+Orphan fragment (PDF line-break split residue)             18         74       28.1%
+Long tail (obscure, one-offs, or genuine unknowns)         140        189      71.9%
+
+--- Top 20 per category: RECIPE INGREDIENTS ---
+
+[orphan_fragment] Orphan fragment (PDF line-break split residue) (18 distinct, 74 rows)
+  22    variegated
+  12    leaf
+  7     grass
+  7     leaves
+  5     Variegated
+  5     lavender 'Monte
+  3     purple 'Monte
+  2     seeded
+  2     Green
+  1     dusty
+  1     echeveria succulents ('Black
+  1     yellow 'Black Eyed
+  1     'Baby
+  1     3/4" hurricane globe
+  1     Blue
+  1     Dusty
+  1     Peach
+  1     White
+
+[long_tail] Long tail (obscure, one-offs, or genuine unknowns) (140 distinct, 189 rows)
+  4     Variegated Mini
+  4     tinted)
+  4     bi-colored orange & yellow
+  3     tips
+  3     birds of paradise
+  3     Burgundy Upright
+  3     fern
+  3     red berry sprays
+  3     equisetum (horsetail)
+  3     hot pink barronia
+  3     Emerald
+  2     sword
+  2     twigs
+  2     montebresia or crocosmia
+  2     elastic wristlet
+  2     equisetum
+  2     white calycina
+  2     white leptospermum
+  2     'Baby Blue'
+  2     artificial berries
+
+
+Line items total (is_flower=1): 1750 | unmatched: 343 (19.6%)
+
+=== LINE ITEMS ===
+Distinct names: 287 | Total unmatched rows: 343
+
+Category                                                   Distinct   Rows     Share
+------------------------------------------------------------------------------------------
+Orphan fragment (PDF line-break split residue)             8          8        2.3%
+Long tail (obscure, one-offs, or genuine unknowns)         279        335      97.7%
+
+--- Top 20 per category: LINE ITEMS ---
+
+[orphan_fragment] Orphan fragment (PDF line-break split residue) (8 distinct, 8 rows)
+  1     12" Cardettes / 1000
+  1     18" Cardettes / 1000
+  1     4½" 1 PP POINSETTIAS
+  1     6½" 1 PP POINSETTIAS
+  1     7½" 2 PP POINSETTIAS
+  1     8½" 3 PP POINSETTIAS
+  1     9" Cardettes / 1000
+  1     BILL TO: 120916 OWNER'S NAME: JEFF FISHER SALESMAN: 9 TERMS: CASH SHIP VIA: MONTH REP NO: ENTERED BY: DSC
+
+[long_tail] Long tail (obscure, one-offs, or genuine unknowns) (279 distinct, 335 rows)
+  6     RFU MISCOF
+  5     RHOBELLINI
+  5     RFU GRIB
+  4     SOLID RESC
+  3     Atomic 50 CM
+  3     SOLID POME
+  3     POME ORDER WOLL587
+  3     Born Free 50 cm
+  3     MERI COL
+  3     MIXED OPERATIONS
+  3     GOLD ILIMO
+  2     MISCELLANOUS FLOWER
+  2     CREMON
+  2     SOLE STAR
+  2     ITALIAN RUSKUS
+  2     RESC
+  2     NAGI
+  2     GINESTRA
+  2     BOF THEE
+  2     JUST FOR FLOWERS; FRESH GREEN
+
+
+=== Case-variant duplicates (same name, different casing) ===
+148 groups produce redundant rows the classifier treats as distinct.
+Top 10:
+  27    unmatched rows across 2 variants of "variegated"
+  22    unmatched rows across 2 variants of "teepee"
+  5     unmatched rows across 2 variants of "variegated mini"
+  4     unmatched rows across 2 variants of "fern"
+  2     unmatched rows across 2 variants of "ornamental kale"
+  2     unmatched rows across 2 variants of "red taper candles"
+  2     unmatched rows across 2 variants of "dusty"
+  0     unmatched rows across 3 variants of "blue delphinium"
+  0     unmatched rows across 2 variants of "blue iris"
+  0     unmatched rows across 3 variants of "coral gerberas"
+
+
+=== Phase 0 baseline (save these numbers to compare against after each phase) ===
+{
+  "timestamp": "2026-04-21T03:06:21.807Z",
+  "recipe_ingredients": {
+    "total": 4526,
+    "unmatched_rows": 263,
+    "unmatched_distinct": 158,
+    "unmatched_pct": 5.8,
+    "by_category": {
+      "dictionary_gap": {
+        "distinct": 0,
+        "rows": 0
+      },
+      "generic_lily": {
+        "distinct": 0,
+        "rows": 0
+      },
+      "orphan_fragment": {
+        "distinct": 18,
+        "rows": 74
+      },
+      "typo": {
+        "distinct": 0,
+        "rows": 0
+      },
+      "non_flower_supply": {
+        "distinct": 0,
+        "rows": 0
+      },
+      "long_tail": {
+        "distinct": 140,
+        "rows": 189
+      },
+      "empty": {
+        "distinct": 0,
+        "rows": 0
+      }
+    }
+  },
+  "line_items": {
+    "total": 1750,
+    "unmatched_rows": 343,
+    "unmatched_distinct": 287,
+    "unmatched_pct": 19.6,
+    "by_category": {
+      "dictionary_gap": {
+        "distinct": 0,
+        "rows": 0
+      },
+      "generic_lily": {
+        "distinct": 0,
+        "rows": 0
+      },
+      "orphan_fragment": {
+        "distinct": 8,
+        "rows": 8
+      },
+      "typo": {
+        "distinct": 0,
+        "rows": 0
+      },
+      "non_flower_supply": {
+        "distinct": 0,
+        "rows": 0
+      },
+      "long_tail": {
+        "distinct": 279,
+        "rows": 335
+      },
+      "empty": {
+        "distinct": 0,
+        "rows": 0
+      }
+    }
+  },
+  "case_variant_groups": 148
+}

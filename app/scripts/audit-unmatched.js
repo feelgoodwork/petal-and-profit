@@ -110,6 +110,8 @@ function categorize(name) {
 // --- Data fetch ----------------------------------------------------------
 
 async function fetchUnmatchedRecipeIngredients() {
+  // Exclude rows flagged as 'non_ingredient' (supplies the rebuild script
+  // intentionally skips) so they don't inflate the unmatched count.
   return await sql`
     SELECT
       ingredient_name,
@@ -118,6 +120,7 @@ async function fetchUnmatchedRecipeIngredients() {
       BOOL_OR(is_foliage = 1) AS any_foliage
     FROM recipe_ingredients
     WHERE flower_id IS NULL
+      AND COALESCE(match_status, 'pending') <> 'non_ingredient'
     GROUP BY ingredient_name
     ORDER BY COUNT(*) DESC
   `;
