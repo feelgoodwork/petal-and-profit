@@ -189,6 +189,17 @@ const COLOR_MATTERS = {
   'dahlia':            'dahlia',
 };
 
+/**
+ * Sanity ceiling for a per-stem cost record. Per-stem florist wholesale
+ * almost never exceeds this — anything higher is almost certainly a
+ * bunch price or a misclassification (e.g. "GEGERA DAISY" $391.25
+ * which was a gerbera bunch mislabeled as a daisy).
+ *
+ * Cost records above this value are stored but marked is_current=false
+ * so they don't pollute averages or the tiered fallback.
+ */
+const SANITY_MAX_PER_STEM = 15;
+
 const COLORS = [
   'hot pink', 'light pink', 'pale pink', 'dusty pink', 'antique pink',
   'deep purple', 'dark orange', 'deep coral', 'lime green', 'pale green',
@@ -222,6 +233,9 @@ const TYPO_FIXES = [
   [/\balstromeria\b/gi, 'alstroemeria'],
   [/\balastromeria\b/gi, 'alstroemeria'],
   [/\brununculus\b/gi, 'ranunculus'],
+  [/\bgegera\b/gi, 'gerbera'],
+  [/\bgerbera daisy\b/gi, 'gerbera'],
+  [/\bgerbera daisies\b/gi, 'gerberas'],
 ];
 
 function fixTypos(text) {
@@ -371,6 +385,7 @@ module.exports = {
   COLOR_MATTERS,
   COLORS,
   SUPPLY_PATTERNS,
+  SANITY_MAX_PER_STEM,
   isSupply,
   fixTypos,
   extractColor,

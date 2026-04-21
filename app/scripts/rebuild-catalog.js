@@ -8,7 +8,7 @@
 const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
-const { classifyProductType, isSupply } = require('../src/lib/matching/classifier-data.js');
+const { classifyProductType, isSupply, SANITY_MAX_PER_STEM } = require('../src/lib/matching/classifier-data.js');
 
 const envPath = path.join(__dirname, '..', '.env.local');
 if (fs.existsSync(envPath)) {
@@ -213,19 +213,26 @@ async function main() {
   console.log('\n[4/3] Setting cost currency (2024+ rule)...');
   await client.query('ALTER TABLE ingredient_costs ADD COLUMN IF NOT EXISTS is_current BOOLEAN DEFAULT false');
   await client.query('UPDATE ingredient_costs SET is_current = false');
-  const { rowCount: marked2024 } = await client.query("UPDATE ingredient_costs SET is_current = true WHERE parsed_date >= '2024-01-01'");
+  const { rowCount: marked2024 } = await client.query(
+    "UPDATE ingredient_costs SET is_current = true WHERE parsed_date >= '2024-01-01' AND cost_per = 'stem' AND unit_cost <= $1",
+    [SANITY_MAX_PER_STEM]
+  );
   const { rowCount: markedFallback } = await client.query(`
     UPDATE ingredient_costs SET is_current = true
     WHERE id IN (
       SELECT DISTINCT ON (flower_id) id
       FROM ingredient_costs
       WHERE flower_id NOT IN (
-        SELECT DISTINCT flower_id FROM ingredient_costs WHERE parsed_date >= '2024-01-01'
-      )
+        SELECT DISTINCT flower_id FROM ingredient_costs WHERE parsed_date >= '2024-01-01' AND cost_per = 'stem' AND unit_cost <= $1
+      ) AND cost_per = 'stem' AND unit_cost <= $1
       ORDER BY flower_id, parsed_date DESC NULLS LAST, id DESC
     )
-  `);
-  console.log(`  Current: ${marked2024} rows (2024+), ${markedFallback} fallback rows`);
+  `, [SANITY_MAX_PER_STEM]);
+  const { rowCount: sanityDropped } = await client.query(
+    "SELECT COUNT(*)::int n FROM ingredient_costs WHERE cost_per = 'stem' AND unit_cost > $1",
+    [SANITY_MAX_PER_STEM]
+  ).then(r => ({ rowCount: r.rows[0].n }));
+  console.log(`  Current: ${marked2024} rows (2024+), ${markedFallback} fallback rows, ${sanityDropped} rows excluded by sanity cap (>$${SANITY_MAX_PER_STEM}/stem)`);
 
   // ---- Summary ----
   const { rows: [stats] } = await client.query(`
