@@ -2,7 +2,7 @@ import { getDb } from '@/lib/db';
 
 export async function GET() {
   try {
-    const sql = getDb();
+    const sql = await getDb();
     const recipes = await sql`
       SELECT r.*, rc.name as category_name,
         (SELECT COUNT(*) FROM recipe_ingredients WHERE recipe_id = r.id) as ingredient_count

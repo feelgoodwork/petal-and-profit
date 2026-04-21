@@ -2,7 +2,7 @@ import { getDb } from '@/lib/db';
 
 export async function GET() {
   try {
-    const sql = getDb();
+    const sql = await getDb();
 
     const rows = await sql`
       SELECT wb.*,

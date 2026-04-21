@@ -2,7 +2,7 @@ import { getDb } from '@/lib/db';
 
 export async function GET() {
   try {
-    const sql = getDb();
+    const sql = await getDb();
 
     const [vendors] = await sql`SELECT COUNT(*) as count FROM vendors`;
     const [receipts] = await sql`SELECT COUNT(*) as count FROM receipts`;

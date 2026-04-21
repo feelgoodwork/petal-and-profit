@@ -6,7 +6,7 @@ import path from 'path';
 export async function POST(request: Request) {
   try {
     await runMigrations();
-    const sql = getDb();
+    const sql = await getDb();
 
     const body = await request.json().catch(() => ({}));
     const gdrivePath = body.path || process.env.GDRIVE_DATA_PATH;

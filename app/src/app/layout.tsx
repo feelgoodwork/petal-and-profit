@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { StoreSwitcher } from "@/components/StoreSwitcher";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,7 +41,8 @@ export default function RootLayout({
           <a href="/what-if" className="text-sm text-stone-500 hover:text-stone-900">What-If</a>
           <a href="/analysis" className="text-sm text-stone-500 hover:text-stone-900">Analysis</a>
           <a href="/savings" className="text-sm text-stone-500 hover:text-stone-900">P&P Savings</a>
-          <a href="/help" className="text-sm text-stone-400 hover:text-stone-900 ml-auto">Help</a>
+          <a href="/help" className="text-sm text-stone-400 hover:text-stone-900">Help</a>
+          <StoreSwitcher />
         </nav>
         <main className="bg-stone-50 min-h-screen">
           {children}

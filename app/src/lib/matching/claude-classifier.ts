@@ -19,7 +19,7 @@ export async function classifyUnmatchedItems(): Promise<{
   marked_non_flower: number;
   errors: number;
 }> {
-  const sql = getDb();
+  const sql = await getDb();
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
 

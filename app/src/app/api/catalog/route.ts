@@ -4,7 +4,7 @@ import { loadCatalogIndex, loadPpPrices, resolvePpPrice } from '@/lib/matching/c
 
 export async function GET() {
   try {
-    const sql = getDb();
+    const sql = await getDb();
     const entries = await sql`
       SELECT fc.*,
         (SELECT COUNT(*) FROM flower_aliases WHERE flower_id = fc.id) as alias_count,

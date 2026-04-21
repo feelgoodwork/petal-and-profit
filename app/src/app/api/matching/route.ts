@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     if (body.action === 'confirm') {
-      const sql = getDb();
+      const sql = await getDb();
       const [receipt] = await sql`
         SELECT r.vendor_id FROM line_items li
         JOIN receipts r ON li.receipt_id = r.id

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
 
     // Look up stored data by catalog type
     if (catalogType) {
-      const sql = getDb();
+      const sql = await getDb();
       const products = await sql`
         SELECT * FROM fiftyflowers_benchmarks
         WHERE catalog_type = ${catalogType}
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Return stored benchmark data
-    const sql = getDb();
+    const sql = await getDb();
     const benchmarks = await sql`
       SELECT * FROM fiftyflowers_benchmarks
       ORDER BY catalog_type, title
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST() {
   try {
-    const sql = getDb();
+    const sql = await getDb();
 
     // Create table if needed
     await sql`CREATE TABLE IF NOT EXISTS fiftyflowers_benchmarks (

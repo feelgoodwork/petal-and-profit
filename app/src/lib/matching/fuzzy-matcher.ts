@@ -14,7 +14,7 @@ interface MatchSuggestion {
 }
 
 export async function generateMatchSuggestions(): Promise<MatchSuggestion[]> {
-  const sql = getDb();
+  const sql = await getDb();
 
   const catalog = await sql`SELECT id, canonical_name, category FROM flower_catalog` as Array<{ id: number; canonical_name: string; category: string }>;
   if (catalog.length === 0) return [];
@@ -77,7 +77,7 @@ export async function generateMatchSuggestions(): Promise<MatchSuggestion[]> {
 }
 
 export async function confirmMatch(lineItemId: number, flowerId: number, vendorId: number | null): Promise<void> {
-  const sql = getDb();
+  const sql = await getDb();
 
   const [lineItem] = await sql`SELECT * FROM line_items WHERE id = ${lineItemId}`;
   if (!lineItem) return;

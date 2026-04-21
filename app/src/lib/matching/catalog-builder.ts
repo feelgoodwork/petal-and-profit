@@ -4,7 +4,7 @@ import { classifyProductType, PRODUCT_TYPES } from './variety-lookup';
 type Row = Record<string, unknown>;
 
 export async function rebuildCatalog(): Promise<{ created: number; skipped: number }> {
-  const sql = getDb();
+  const sql = await getDb();
 
   await sql`DELETE FROM flower_aliases`;
   await sql`DELETE FROM ingredient_costs`;
@@ -35,7 +35,7 @@ export async function rebuildCatalog(): Promise<{ created: number; skipped: numb
 }
 
 export async function autoMatchRecipeIngredients(): Promise<{ matched: number; unmatched: number }> {
-  const sql = getDb();
+  const sql = await getDb();
 
   const catalog = await sql`SELECT id, canonical_name FROM flower_catalog` as Row[];
   const catalogMap = new Map(catalog.map(c => [String(c.canonical_name), Number(c.id)]));
@@ -65,7 +65,7 @@ export async function autoMatchRecipeIngredients(): Promise<{ matched: number; u
 }
 
 export async function autoMatchLineItems(): Promise<{ matched: number; unmatched: number; aliases_created: number }> {
-  const sql = getDb();
+  const sql = await getDb();
 
   const catalog = await sql`SELECT id, canonical_name FROM flower_catalog` as Row[];
   const catalogMap = new Map(catalog.map(c => [String(c.canonical_name), Number(c.id)]));

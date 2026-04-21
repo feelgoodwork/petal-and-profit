@@ -8,7 +8,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const sql = getDb();
+    const sql = await getDb();
     const numId = Number(id);
 
     const unitCost = Number(body.unit_cost);

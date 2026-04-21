@@ -21,7 +21,7 @@ interface LineItemRow {
 }
 
 export async function GET() {
-  const sql = getDb();
+  const sql = await getDb();
 
   const catalog = (await sql`
     SELECT id, canonical_name, category, base_type
@@ -81,7 +81,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const sql = getDb();
+  const sql = await getDb();
   const body = await request.json();
   const id = Number(body.line_item_id);
   if (!id) return Response.json({ error: 'line_item_id required' }, { status: 400 });

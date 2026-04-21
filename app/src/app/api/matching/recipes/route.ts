@@ -1,7 +1,7 @@
 import { getDb } from '@/lib/db';
 
 export async function GET() {
-  const sql = getDb();
+  const sql = await getDb();
 
   const rows = await sql`
     SELECT
@@ -49,7 +49,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const sql = getDb();
+  const sql = await getDb();
   const body = await request.json();
   const id = Number(body.ingredient_id);
   if (!id) return Response.json({ error: 'ingredient_id required' }, { status: 400 });

@@ -9,7 +9,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const sql = getDb();
+    const sql = await getDb();
     const recipeId = Number(id);
 
     const ingredientId = Number(body.ingredient_id);
@@ -43,7 +43,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const sql = getDb();
+    const sql = await getDb();
     const recipeId = Number(id);
 
     const flowerId = body.flower_id ? Number(body.flower_id) : null;
@@ -68,7 +68,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     const body = await request.json();
-    const sql = getDb();
+    const sql = await getDb();
 
     await sql`DELETE FROM recipe_ingredients WHERE id = ${Number(body.ingredient_id)} AND recipe_id = ${Number(id)}`;
 

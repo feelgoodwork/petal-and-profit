@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const sql = getDb();
+    const sql = await getDb();
     const productType = request.nextUrl.searchParams.get('type');
 
     if (productType) {

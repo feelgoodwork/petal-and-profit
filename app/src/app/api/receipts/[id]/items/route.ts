@@ -8,7 +8,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const sql = getDb();
+    const sql = await getDb();
     const numId = Number(id);
 
     // Update individual line item

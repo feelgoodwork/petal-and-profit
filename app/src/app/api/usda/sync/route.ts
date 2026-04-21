@@ -8,7 +8,7 @@ const REPORTS = [
 
 export async function POST() {
   try {
-    const sql = getDb();
+    const sql = await getDb();
     const results = [];
 
     for (const report of REPORTS) {

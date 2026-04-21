@@ -84,7 +84,7 @@ export async function loadCurrentCosts(): Promise<Map<number, {
   latest_cost_date: string | null;
   cost_count: number;
 }>> {
-  const sql = getDb();
+  const sql = await getDb();
 
   const rows = await sql`
     SELECT
@@ -147,7 +147,7 @@ export async function loadCatalogIndex(): Promise<{
   byId: Map<number, { canonical_name: string; base_type: string | null }>;
   byName: Map<string, number>;
 }> {
-  const sql = getDb();
+  const sql = await getDb();
   const catalog = await sql`SELECT id, canonical_name, base_type FROM flower_catalog`;
 
   const byId = new Map<number, { canonical_name: string; base_type: string | null }>();
@@ -235,7 +235,7 @@ export async function loadPpPrices(): Promise<{
   byType: Map<string, number>;
   byBase: Map<string, number>;
 }> {
-  const sql = getDb();
+  const sql = await getDb();
   const rows = await sql`
     SELECT catalog_type, base_type, MIN(pp_price)::numeric as pp_price
     FROM wholesale_benchmarks

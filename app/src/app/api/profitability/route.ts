@@ -5,7 +5,7 @@ type Row = Record<string, unknown>;
 
 export async function GET() {
   try {
-    const sql = getDb();
+    const sql = await getDb();
     const snapshots = await sql`
       SELECT ps.*, r.name as recipe_name, rc.name as category_name
       FROM profitability_snapshots ps
@@ -21,7 +21,7 @@ export async function GET() {
 
 export async function POST() {
   try {
-    const sql = getDb();
+    const sql = await getDb();
 
     // Ensure P&P columns exist
     await sql`ALTER TABLE profitability_snapshots ADD COLUMN IF NOT EXISTS pp_flower_cost REAL`;

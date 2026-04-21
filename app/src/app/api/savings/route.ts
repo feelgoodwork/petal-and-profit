@@ -13,7 +13,7 @@ import { loadCurrentCosts, loadCatalogIndex, resolveFlowerCost, loadPpPrices, re
  */
 export async function GET() {
   try {
-    const sql = getDb();
+    const sql = await getDb();
 
     // 1. Get all 2026 sales matched to recipes, with times sold
     const salesByRecipe = await sql`

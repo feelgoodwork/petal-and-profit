@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const sql = getDb();
+    const sql = await getDb();
     const numId = Number(id);
 
     const [entry] = await sql`SELECT * FROM flower_catalog WHERE id = ${numId}`;
