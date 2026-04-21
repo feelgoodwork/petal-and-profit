@@ -26,15 +26,20 @@ export async function initStoreDatabase(databaseUrl: string): Promise<{
   const sql = neon(databaseUrl);
 
   // Split on semicolons that terminate a statement. Naive but safe for our
-  // schema (no string literals with embedded semicolons).
+  // schema (no string literals with embedded semicolons). For each resulting
+  // chunk, strip leading/trailing pure-comment lines so a chunk like
+  // `-- header comment\nCREATE TABLE foo (...)` still runs the CREATE.
   const statements = schemaSql
     .split(/;\s*(?:\r?\n|$)/)
-    .map(s => s.trim())
-    .filter(s => s.length > 0 && !s.startsWith('--'));
+    .map(chunk => chunk
+      .split(/\r?\n/)
+      .filter(line => !/^\s*--/.test(line))
+      .join('\n')
+      .trim()
+    )
+    .filter(s => s.length > 0);
 
   for (const stmt of statements) {
-    // Skip pure comment blocks
-    if (/^(\s*--.*(\r?\n)?)+$/.test(stmt)) continue;
     await sql.query(stmt);
   }
 
