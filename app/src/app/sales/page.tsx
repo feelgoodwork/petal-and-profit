@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -22,6 +21,18 @@ interface TopSeller {
   margin_pct: number | null;
 }
 
+interface OrderRow {
+  order_number: string;
+  order_date: string;
+  source: string | null;
+  occasion: string | null;
+  line_count: number;
+  order_total: number | null;
+  total_qty: number | null;
+  primary_description: string | null;
+  has_recipe_match: boolean;
+}
+
 interface SalesData {
   top_sellers: TopSeller[];
   stats: {
@@ -34,15 +45,40 @@ interface SalesData {
   };
   by_occasion: Array<{ occasion: string; count: string; revenue: number }>;
   monthly: Array<{ month: string; sales: string; revenue: number }>;
+  orders: OrderRow[] | null;
+  range: {
+    from: string | null;
+    to: string | null;
+    days: number | null;
+    includes_orders: boolean;
+  };
+}
+
+const RANGE_PRESETS: Array<{ label: string; days: number | null }> = [
+  { label: 'All time', days: null },
+  { label: 'Last 30d', days: 30 },
+  { label: 'Last 90d', days: 90 },
+  { label: 'Last 6mo', days: 183 },
+  { label: 'Last 1y', days: 365 },
+];
+
+function ymd(d: Date): string {
+  return d.toISOString().slice(0, 10);
 }
 
 export default function SalesPage() {
   const [data, setData] = useState<SalesData | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [from, setFrom] = useState<string>('');
+  const [to, setTo] = useState<string>('');
 
-  async function fetchSales() {
-    const res = await fetch('/api/sales');
+  async function fetchSales(fromVal: string, toVal: string) {
+    const params = new URLSearchParams();
+    if (fromVal) params.set('from', fromVal);
+    if (toVal) params.set('to', toVal);
+    const qs = params.toString();
+    const res = await fetch('/api/sales' + (qs ? `?${qs}` : ''));
     if (res.ok) setData(await res.json());
   }
 
@@ -57,14 +93,25 @@ export default function SalesPage() {
     const d = await res.json();
     if (d.success) {
       setResult(`Imported ${d.total_imported} line items from ${Object.keys(d.by_file).length} files`);
-      fetchSales();
+      fetchSales(from, to);
     } else {
       setResult(`Error: ${d.error}`);
     }
     setImporting(false);
   }
 
-  useEffect(() => { fetchSales(); }, []);
+  useEffect(() => { fetchSales(from, to); }, [from, to]);
+
+  function applyPreset(days: number | null) {
+    if (days == null) {
+      setFrom(''); setTo('');
+      return;
+    }
+    const today = new Date();
+    const start = new Date(today.getTime() - days * 86400000);
+    setFrom(ymd(start));
+    setTo(ymd(today));
+  }
 
   function marginColor(pct: number | null): string {
     if (pct === null) return 'text-stone-400';
@@ -74,6 +121,15 @@ export default function SalesPage() {
     return 'text-red-600';
   }
 
+  const rangeLabel = (() => {
+    if (!data) return '';
+    const r = data.range;
+    if (!r.from && !r.to) return 'All time';
+    if (r.from && r.to) return `${r.from} → ${r.to} (${r.days} days)`;
+    if (r.from) return `From ${r.from}`;
+    return `Through ${r.to}`;
+  })();
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
@@ -81,11 +137,53 @@ export default function SalesPage() {
           <h1 className="text-2xl font-semibold text-stone-900">Sales</h1>
           <p className="text-sm text-stone-500 mt-1">
             {data ? `${Number(data.stats.total_orders).toLocaleString()} orders, $${Number(data.stats.total_revenue || 0).toLocaleString()} revenue` : 'Loading...'}
+            <span className="text-stone-400"> · {rangeLabel}</span>
           </p>
         </div>
         <Button onClick={importSales} disabled={importing}>
           {importing ? 'Importing...' : 'Import Sales Data'}
         </Button>
+      </div>
+
+      {/* Date range controls */}
+      <div className="bg-white border rounded-lg p-3 mb-6 flex flex-wrap gap-3 items-center">
+        <span className="text-xs uppercase tracking-wider text-stone-500">Date range</span>
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={from}
+            onChange={e => setFrom(e.target.value)}
+            className="px-2 py-1 text-sm border rounded-md"
+            aria-label="From date"
+          />
+          <span className="text-stone-400 text-sm">→</span>
+          <input
+            type="date"
+            value={to}
+            onChange={e => setTo(e.target.value)}
+            className="px-2 py-1 text-sm border rounded-md"
+            aria-label="To date"
+          />
+          {(from || to) && (
+            <button
+              onClick={() => { setFrom(''); setTo(''); }}
+              className="text-xs text-stone-500 hover:text-stone-700 underline ml-1"
+            >
+              clear
+            </button>
+          )}
+        </div>
+        <div className="flex gap-1 ml-auto">
+          {RANGE_PRESETS.map(p => (
+            <button
+              key={p.label}
+              onClick={() => applyPreset(p.days)}
+              className="px-2 py-1 text-xs rounded-md border bg-white text-stone-600 hover:bg-stone-50"
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {result && (
@@ -216,13 +314,66 @@ export default function SalesPage() {
               </div>
             </div>
           </div>
+
+          {/* Orders list — only when range <= 6 months */}
+          {data.orders && data.orders.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wider mb-2">
+                Orders ({data.orders.length.toLocaleString()})
+                {data.orders.length === 5000 && <span className="text-stone-400 ml-2 text-xs">capped at 5,000</span>}
+              </h2>
+              <div className="border rounded-lg bg-white max-h-[600px] overflow-auto">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-white shadow-sm">
+                    <TableRow>
+                      <TableHead>Order #</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Primary Item</TableHead>
+                      <TableHead>Source</TableHead>
+                      <TableHead>Occasion</TableHead>
+                      <TableHead className="text-right">Lines</TableHead>
+                      <TableHead className="text-right">Qty</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead>Recipe</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.orders.map((o) => (
+                      <TableRow key={o.order_number}>
+                        <TableCell className="font-mono text-xs">{o.order_number}</TableCell>
+                        <TableCell className="font-mono text-xs">{o.order_date}</TableCell>
+                        <TableCell className="text-sm">{o.primary_description}</TableCell>
+                        <TableCell className="text-xs text-stone-500">{o.source ?? '-'}</TableCell>
+                        <TableCell className="text-xs text-stone-500">{o.occasion ?? '-'}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{o.line_count}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{o.total_qty ?? '-'}</TableCell>
+                        <TableCell className="text-right font-mono text-sm">${Number(o.order_total || 0).toFixed(2)}</TableCell>
+                        <TableCell>
+                          {o.has_recipe_match ? (
+                            <span className="text-emerald-700 text-xs">matched</span>
+                          ) : (
+                            <span className="text-stone-300 text-xs">—</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+          {data.range.from && data.range.to && !data.range.includes_orders && (
+            <div className="text-xs text-stone-500 italic mb-4">
+              Range exceeds 6 months — narrow to under 6 months to see individual orders.
+            </div>
+          )}
         </>
       )}
 
       {data && Number(data.stats.total_sales) === 0 && (
         <div className="text-center py-16 text-stone-400 bg-white border rounded-lg">
-          <p className="text-lg mb-2">No sales data imported yet</p>
-          <p className="text-sm">Click "Import Sales Data" to load from the Sales xlsx files</p>
+          <p className="text-lg mb-2">No sales data in this date range</p>
+          <p className="text-sm">{(from || to) ? 'Try widening the range or click "All time".' : 'Click "Import Sales Data" to load from the Sales xlsx files.'}</p>
         </div>
       )}
     </div>
