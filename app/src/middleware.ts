@@ -38,7 +38,9 @@ export async function middleware(request: NextRequest) {
     pathname === '/landing.html' ||
     pathname === '/demo.html' ||
     pathname === '/strategy.html' ||
-    pathname === '/pilot'
+    pathname === '/pilot' ||
+    pathname === '/full-sales' ||
+    pathname === '/full-sales.html'
   ) {
     return NextResponse.next();
   }
