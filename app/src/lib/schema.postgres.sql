@@ -117,3 +117,23 @@ CREATE TABLE IF NOT EXISTS profitability_snapshots (
   missing_ingredients INTEGER DEFAULT 0,
   computed_at   TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS pilot_applications (
+  id                 SERIAL PRIMARY KEY,
+  shop_name          TEXT NOT NULL,
+  city_state         TEXT NOT NULL,
+  years_in_business  TEXT,
+  shop_type          TEXT,
+  annual_arrangements TEXT,
+  vendor_count       TEXT,
+  recipe_count       TEXT,
+  invoice_storage    TEXT,
+  biggest_unknown    TEXT,
+  contact_name       TEXT NOT NULL,
+  contact_role       TEXT,
+  email              TEXT NOT NULL,
+  phone              TEXT,
+  heard_about        TEXT,
+  status             TEXT NOT NULL DEFAULT 'new',
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

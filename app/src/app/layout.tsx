@@ -41,6 +41,7 @@ export default function RootLayout({
           <a href="/what-if" className="text-sm text-stone-500 hover:text-stone-900">What-If</a>
           <a href="/analysis" className="text-sm text-stone-500 hover:text-stone-900">Analysis</a>
           <a href="/savings" className="text-sm text-stone-500 hover:text-stone-900">P&P Savings</a>
+          <a href="/pilot-applications" className="text-sm text-stone-500 hover:text-stone-900">Pilot</a>
           <a href="/help" className="text-sm text-stone-400 hover:text-stone-900">Help</a>
           <StoreSwitcher />
         </nav>

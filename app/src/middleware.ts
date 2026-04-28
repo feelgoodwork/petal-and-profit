@@ -28,12 +28,18 @@ export async function middleware(request: NextRequest) {
     pathname === '/api/login' ||
     pathname === '/api/logout' ||
     pathname === '/api/session' ||
+    pathname === '/api/pilot-application' ||
     pathname.startsWith('/api/usda/sync') ||
     pathname.startsWith('/api/fiftyflowers')
   ) {
     return NextResponse.next();
   }
-  if (pathname === '/landing.html' || pathname === '/demo.html' || pathname === '/strategy.html') {
+  if (
+    pathname === '/landing.html' ||
+    pathname === '/demo.html' ||
+    pathname === '/strategy.html' ||
+    pathname === '/pilot'
+  ) {
     return NextResponse.next();
   }
 
