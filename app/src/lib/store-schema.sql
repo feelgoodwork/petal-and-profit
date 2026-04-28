@@ -175,6 +175,29 @@ CREATE TABLE IF NOT EXISTS fiftyflowers_benchmarks (
   captured_at   TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS truth_recipes (
+  id           SERIAL PRIMARY KEY,
+  name         TEXT NOT NULL,
+  msrp         REAL,
+  source       TEXT,
+  imported_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS truth_recipes_name_lower_idx ON truth_recipes (LOWER(name));
+
+CREATE TABLE IF NOT EXISTS truth_recipe_ingredients (
+  id               SERIAL PRIMARY KEY,
+  truth_recipe_id  INTEGER NOT NULL REFERENCES truth_recipes(id) ON DELETE CASCADE,
+  line_item_no     INTEGER,
+  ingredient_name  TEXT NOT NULL,
+  line_item_type   TEXT,
+  quantity         REAL,
+  unit_price       REAL,
+  unit_measurement TEXT,
+  notes            TEXT
+);
+CREATE INDEX IF NOT EXISTS truth_recipe_ingr_recipe_idx ON truth_recipe_ingredients (truth_recipe_id);
+CREATE INDEX IF NOT EXISTS truth_recipe_ingr_type_idx ON truth_recipe_ingredients (line_item_type);
+
 CREATE TABLE IF NOT EXISTS data_quality_findings (
   id            SERIAL PRIMARY KEY,
   kind          TEXT NOT NULL,

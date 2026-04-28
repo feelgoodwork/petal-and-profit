@@ -10,6 +10,7 @@ const navItems = [
   { href: '/catalog', label: 'Flower Catalog', icon: '⚘' },
   { href: '/matching', label: 'Match Review', icon: '⟷' },
   { href: '/profitability', label: 'Profitability', icon: '▲' },
+  { href: '/admin/recipe-truth-comparison', label: 'Recipe Truth Diff', icon: '⇄' },
 ];
 
 export function Sidebar() {

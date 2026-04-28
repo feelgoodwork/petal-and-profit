@@ -3,6 +3,9 @@
 /data/*.db-wal
 /data/*.db-shm
 
+# Per-store reference data (xlsx truth sets, etc.) — not source-controlled
+/data/truthsets/
+
 # Timestamped audit CSVs (baseline-phase0.txt etc. remain tracked)
 /scripts/audit-output/unmatched-*.csv
 
