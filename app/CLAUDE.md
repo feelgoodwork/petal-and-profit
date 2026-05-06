@@ -6,7 +6,7 @@
 
 A Next.js 16 + Neon Postgres app that processes wholesale florist invoices, matches line items to floral arrangement recipes, and calculates profitability per arrangement. Built for Milano's UpTowne Florist. Deployed on Vercel with cookie-based password auth.
 
-## Current State (2026-04-15)
+## Current State (2026-05-06)
 
 ### Infrastructure
 - **Database:** Neon Postgres (migrated from SQLite)
@@ -50,7 +50,7 @@ A Next.js 16 + Neon Postgres app that processes wholesale florist invoices, matc
 7. **AI Classifier** -- Claude batch classification of unmatched invoice items
 8. **Match Review** (/matching) -- fuzzy match suggestions with confidence scores
 9. **Profitability** (/profitability) -- all recipes ranked by margin, P&P Cost + P&P Margin % columns, color-coded
-10. **Sales** (/sales) -- top sellers ranked by revenue/volume, revenue by occasion, monthly trend chart
+10. **Sales** (/sales) -- top sellers with profitability (full list, scrollable, sortable by Times Sold / Total Revenue / Flower Cost / Margin), date range filter, per-order list when range <= 6 months, revenue by occasion, monthly trend chart
 11. **Vendors** (/vendors) -- side-by-side cost/stem across vendors, "Best Price" badge per product type
 12. **What-If Pricing** (/what-if) -- slider adjusts sell prices, shows margin impact per recipe
 13. **P&P Savings** (/savings) -- sales-driven analysis: 2026 arrangements sold vs P&P sourcing cost, per-arrangement savings
@@ -58,9 +58,14 @@ A Next.js 16 + Neon Postgres app that processes wholesale florist invoices, matc
 15. **Password Auth** -- middleware cookie gate
 16. **Help** (/help) -- full feature guide
 
-### Where We Left Off (2026-04-15)
+### Where We Left Off (2026-05-06)
 
 **Completed this session:**
+- Sales page top sellers: client-side sortable columns (Times Sold, Total Revenue, Flower Cost, Margin) -- click header to toggle direction, ↓/↑ indicator, nulls always sink to the bottom. Default sort is Times Sold descending.
+- Sales page top sellers: removed `LIMIT 50` from API query so every unique description in the date range is returned. Wrapped table in `max-h-[600px] overflow-auto` scroll container with sticky header (matches the orders block pattern). Header now shows total unique-item count.
+- Important: the top sellers list includes ALL line types (arrangements + tips + loose wraps + non-arrangements), not just arrangements. Summing the Total Revenue column equals the stat card revenue total because there's no longer a row cap.
+
+**Prior session (2026-04-15) -- still relevant:**
 - Wholesale benchmarks system: multi-vendor `wholesale_benchmarks` table, Oberer's scraper (25 products), P&P pricing (wholesale + 20%) shown across catalog, recipe detail, profitability, and savings pages
 - P&P Savings page: sales-driven analysis showing per-arrangement savings if sourced through P&P
 - Recipe ingredient data cleanup: stripped "Flowers:"/"Greens:" label prefixes (71 rows), split multi-ingredient rows (5 rows -> 25), merged line-break splits (13 pairs)
