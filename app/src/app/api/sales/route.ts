@@ -38,7 +38,6 @@ export async function GET(request: Request) {
       WHERE s.order_date >= ${from} AND s.order_date <= ${to}
       GROUP BY s.description, s.recipe_id, r.name, ps.total_flower_cost, ps.margin_pct
       ORDER BY COUNT(*) DESC
-      LIMIT 50
     `;
 
     // Summary stats

@@ -246,10 +246,17 @@ export default function SalesPage() {
 
           {/* Top Sellers */}
           <div className="mb-8">
-            <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wider mb-2">Top Sellers (with profitability)</h2>
-            <div className="border rounded-lg bg-white">
+            <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wider mb-2">
+              Top Sellers (with profitability)
+              {data.top_sellers.length > 0 && (
+                <span className="text-stone-400 ml-2 normal-case font-normal">
+                  · {data.top_sellers.length.toLocaleString()} unique items
+                </span>
+              )}
+            </h2>
+            <div className="border rounded-lg bg-white max-h-[600px] overflow-auto">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-white shadow-sm z-10">
                   <TableRow>
                     <TableHead>Arrangement</TableHead>
                     <TableHead>Recipe Match</TableHead>
