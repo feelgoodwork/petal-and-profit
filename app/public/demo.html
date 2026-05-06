@@ -4,22 +4,28 @@
 <meta name="robots" content="noindex, nofollow">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Floral Profit Palooza — Milano's UpTowne Florist Demo</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Marginosa — Milano's UpTowne Florist Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --ink: #1c1a17;
-  --cream: #faf8f3;
-  --sage: #4a7c59;
-  --sage-lt: #edf4ef;
-  --sage-md: #c8dece;
-  --amber: #c17d2a;
-  --amber-lt: #fdf3e4;
-  --red: #b5372a;
-  --red-lt: #fdecea;
-  --stone: #8a8479;
-  --stone-lt: #f0ede6;
-  --border: #e2ddd4;
+  --ink: #1a1a1a;
+  --cream: #faf4ec;
+  /* "sage" tokens carry the brand-accent role (active nav, primary buttons,
+     "good" KPI values). Mapped to Marginosa fuchsia so the brand reads through
+     the demo. The leaf colors stay reserved for actual data states elsewhere. */
+  --sage: #c8447a;
+  --sage-lt: #fbeaef;
+  --sage-md: #f5d4dd;
+  --sage-deep: #9a2f5e;
+  --amber: #b88a18;
+  --amber-lt: #fdf2dd;
+  --red: #d94f3a;
+  --red-lt: #fbe5e0;
+  --stone: #5a5a5a;
+  --stone-lt: #f1ebe0;
+  --border: #e8e0d2;
   --white: #ffffff;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,8 +43,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   top: 0;
   z-index: 100;
 }
-.logo { font-family: 'Playfair Display', serif; color: white; font-size: 17px; letter-spacing: 0.01em; }
-.logo span { color: #a8d5b5; }
+.logo { font-family: 'Instrument Serif', serif; color: white; font-size: 20px; letter-spacing: -0.01em; font-weight: 400; }
+.logo .ihit { position: relative; display: inline-block; }
+.logo .ihit::before {
+  content: '';
+  position: absolute;
+  top: 1px; left: 50%;
+  transform: translateX(-50%);
+  width: 7px; height: 7px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23c8447a' stroke-width='1.4'%3E%3Cellipse cx='8' cy='3.5' rx='1.6' ry='3'/%3E%3Cellipse cx='8' cy='12.5' rx='1.6' ry='3'/%3E%3Cellipse cx='3.5' cy='8' rx='3' ry='1.6'/%3E%3Cellipse cx='12.5' cy='8' rx='3' ry='1.6'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat;
+}
+.logo i { font-style: normal; visibility: hidden; }
 .shop-name { font-size: 12px; color: #999; letter-spacing: 0.06em; text-transform: uppercase; }
 .demo-badge {
   background: var(--amber);
@@ -92,7 +108,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 /* ── PAGE HEADER ── */
 .page-header { margin-bottom: 28px; }
-.page-header h1 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.page-header h1 { font-family: 'Instrument Serif', serif; font-size: 26px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
 .page-header p { font-size: 13px; color: var(--stone); }
 
 /* ── KPI ROW ── */
@@ -112,12 +128,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 /* ── SECTION ── */
 .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-.section-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 600; }
+.section-title { font-family: 'Instrument Serif', serif; font-size: 17px; font-weight: 600; }
 .section-actions { display: flex; gap: 8px; }
 .btn { font-size: 12px; font-weight: 500; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); color: var(--ink); cursor: pointer; transition: all 0.15s; }
 .btn:hover { background: var(--stone-lt); }
 .btn-primary { background: var(--sage); border-color: var(--sage); color: white; }
-.btn-primary:hover { background: #3d6b4a; }
+.btn-primary:hover { background: var(--sage-deep); }
 
 /* ── RECIPE TABLE ── */
 .recipe-table { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
@@ -234,61 +250,79 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 <style>
 #pw-gate {
   position: fixed; inset: 0; z-index: 99999;
-  background: #1c1a17;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex; align-items: center; justify-content: center;
   font-family: 'DM Sans', sans-serif;
 }
 .pw-box {
-  background: #232017;
-  border: 1px solid #383530;
+  background: var(--white);
+  border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 48px 40px;
-  width: 360px;
+  padding: 56px 44px 44px;
+  width: 340px;
   text-align: center;
+  box-shadow: 0 24px 60px -16px rgba(26,26,26,0.12);
 }
 .pw-logo {
-  font-family: 'Playfair Display', Georgia, serif;
-  color: white; font-size: 20px; margin-bottom: 8px;
+  font-family: 'Instrument Serif', Georgia, serif;
+  color: var(--ink); font-size: 36px;
+  font-weight: 400; letter-spacing: -0.02em;
+  line-height: 1; margin-bottom: 6px;
 }
-.pw-logo span { color: #7ec894; }
-.pw-sub { font-size: 13px; color: #666; margin-bottom: 32px; }
+.pw-logo .ihit { position: relative; display: inline-block; }
+.pw-logo .ihit::before {
+  content: '';
+  position: absolute;
+  top: 4px; left: 50%;
+  transform: translateX(-50%);
+  width: 11px; height: 11px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23c8447a' stroke-width='1.4'%3E%3Cellipse cx='8' cy='3.5' rx='1.6' ry='3'/%3E%3Cellipse cx='8' cy='12.5' rx='1.6' ry='3'/%3E%3Cellipse cx='3.5' cy='8' rx='3' ry='1.6'/%3E%3Cellipse cx='12.5' cy='8' rx='3' ry='1.6'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat;
+}
+.pw-logo i { font-style: normal; visibility: hidden; }
+.pw-sub {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-style: italic;
+  font-size: 15px; color: var(--stone);
+  margin-bottom: 32px;
+}
 .pw-input {
-  width: 100%; padding: 12px 16px;
-  background: #1a1815; border: 1px solid #383530;
-  border-radius: 10px; color: white; font-size: 15px;
+  width: 100%; padding: 13px;
+  background: var(--cream); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--ink); font-size: 14px;
   font-family: 'DM Mono', monospace;
   text-align: center; letter-spacing: 0.1em;
   outline: none; margin-bottom: 12px;
-  transition: border-color 0.2s;
+  transition: border-color 0.15s;
 }
-.pw-input:focus { border-color: #4a7c59; }
+.pw-input:focus { border-color: var(--sage); }
 .pw-input.shake {
-  animation: shake 0.4s ease;
-  border-color: #b5372a;
+  animation: shake 0.35s ease;
+  border-color: var(--red);
 }
 @keyframes shake {
   0%,100%{transform:translateX(0)}
-  20%{transform:translateX(-8px)}
-  40%{transform:translateX(8px)}
-  60%{transform:translateX(-6px)}
-  80%{transform:translateX(6px)}
+  25%{transform:translateX(-7px)}
+  75%{transform:translateX(7px)}
 }
 .pw-btn {
-  width: 100%; padding: 12px;
-  background: #4a7c59; border: none; border-radius: 10px;
-  color: white; font-size: 14px; font-weight: 500;
+  width: 100%; padding: 13px;
+  background: var(--sage); border: none; border-radius: 999px;
+  color: white; font-size: 13px; font-weight: 500;
   cursor: pointer; font-family: 'DM Sans', sans-serif;
-  transition: background 0.2s;
+  transition: background 0.15s;
 }
-.pw-btn:hover { background: #3d6b4a; }
-.pw-err { font-size: 12px; color: #e07060; margin-top: 10px; min-height: 18px; }
-.pw-hint { font-size: 11px; color: #444; margin-top: 24px; }
+.pw-btn:hover { background: var(--sage-deep); }
+.pw-err { font-size: 12px; color: var(--red); margin-top: 10px; min-height: 18px; }
+.pw-hint { font-size: 11px; color: var(--stone); margin-top: 24px; }
 </style>
 
 <div id="pw-gate">
   <div class="pw-box">
-    <div class="pw-logo">Floral <span>Profit</span> Palooza</div>
-    <div class="pw-sub">Private preview — enter password to continue</div>
+    <div class="pw-logo">Marg<span class="ihit"><i>i</i></span>nosa</div>
+    <div class="pw-sub">private preview</div>
     <input type="password" class="pw-input" id="pw-input" placeholder="password" autocomplete="off"
       onkeydown="if(event.key==='Enter')checkPw()">
     <button class="pw-btn" onclick="checkPw()">Enter</button>
@@ -308,7 +342,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   }
   window.checkPw = function(){
     var val = document.getElementById('pw-input').value.trim().toLowerCase();
-    if(val === 'palooza2026'){
+    if(val === '1234'){
       sessionStorage.setItem(SESSION_KEY,'ok');
       document.getElementById('pw-gate').remove();
     } else {
@@ -326,7 +360,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 
 <div class="topbar">
-  <div class="logo">Floral <span>Profit</span> Palooza</div>
+  <div class="logo">Marg<span class="ihit"><i>i</i></span>nosa</div>
   <div class="shop-name">Milano's UpTowne Florist</div>
   <div class="demo-badge">Live Demo</div>
 </div>
@@ -704,7 +738,7 @@ function renderDashboard() {
       <div class="recipe-cell"><span class="arr-name">${arr.name}</span></div>
       <div class="recipe-cell right">${fmt(arr.msrp)}</div>
       <div class="recipe-cell right" style="color:${missing>0?'#bbb':'inherit'}">${knownCost>0?fmt(knownCost):'—'}${missing>0?` <span style="font-size:10px;color:#bbb">(+${missing})</span>`:''}</div>
-      <div class="recipe-cell right" style="color:${gm>0?'#4a7c59':'#bbb'}">${knownCost>0?fmt(gm):'—'}</div>
+      <div class="recipe-cell right" style="color:${gm>0?'#c8447a':'#bbb'}">${knownCost>0?fmt(gm):'—'}</div>
       <div class="recipe-cell center"><span class="markup-pill pill-${cls}">${markupLabel(markup,missing)}</span></div>
       <div class="recipe-cell center" style="font-size:11px;color:var(--stone)">${statusLabel(markup,missing)}</div>
     </div>`;
@@ -749,7 +783,7 @@ function renderRecipes(filter) {
         <div class="recipe-cell"><span class="arr-name">${arr.name}</span></div>
         <div class="recipe-cell right">${fmt(arr.msrp)}</div>
         <div class="recipe-cell right" style="color:${missing>0?'#bbb':'inherit'}">${knownCost>0?fmt(knownCost):'—'}</div>
-        <div class="recipe-cell right" style="color:${gm>0?'#4a7c59':'#bbb'}">${knownCost>0?fmt(gm):'—'}</div>
+        <div class="recipe-cell right" style="color:${gm>0?'#c8447a':'#bbb'}">${knownCost>0?fmt(gm):'—'}</div>
         <div class="recipe-cell center"><span class="markup-pill pill-${cls}">${markupLabel(markup,missing)}</span></div>
         <div class="recipe-cell center" style="font-size:11px;color:var(--stone)">${missing>0?missing+' missing':'&nbsp;'}</div>
       </div>

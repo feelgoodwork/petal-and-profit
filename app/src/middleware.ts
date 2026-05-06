@@ -20,6 +20,7 @@ export async function middleware(request: NextRequest) {
     pathname === '/login' ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
+    pathname.startsWith('/marginosa/') ||
     pathname.endsWith('.svg')
   ) {
     return NextResponse.next();
@@ -36,6 +37,7 @@ export async function middleware(request: NextRequest) {
   }
   if (
     pathname === '/landing.html' ||
+    pathname === '/marginosa.html' ||
     pathname === '/demo.html' ||
     pathname === '/strategy.html' ||
     pathname === '/pilot' ||

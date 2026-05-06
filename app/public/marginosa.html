@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Marginosa — The margin intelligence platform for flower shops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&family=Caveat:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── BRAND TOKENS (calibrated from the dahlia) ── */
+:root {
+  --white:        #ffffff;
+  --cream:        #f5ebe0;
+  --cream-soft:   #faf4ec;
+  --linen:        #fafaf7;
+  --border:       #e8e0d2;
+  --border-soft:  #f1ebe0;
+
+  --ink:          #1a1a1a;
+  --slate:        #5a5a5a;
+  --slate-lt:     #9a9a9a;
+
+  --fuchsia:      #c8447a;
+  --fuchsia-deep: #9a2f5e;
+  --fuchsia-soft: #fbeaef;
+
+  --marigold:     #e8b13a;
+  --marigold-dp:  #b88a18;
+  --marigold-sf:  #fdf2dd;
+  --zinnia:       #d94f3a;
+  --zinnia-soft:  #fbe5e0;
+  --leaf:         #4a6b3f;
+  --leaf-soft:    #ebf1e8;
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--white);
+  color: var(--ink);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── TYPOGRAPHY ── */
+h1, h2, h3, h4 {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+em {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  color: var(--fuchsia);
+}
+.script { font-family: 'Caveat', cursive; font-weight: 500; }
+p { color: var(--slate); }
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 56px; height: 64px;
+}
+.nav-brand { display: flex; align-items: baseline; gap: 12px; }
+.nav-mark {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  align-self: center;
+}
+.nav-mark svg { width: 100%; height: 100%; }
+.nav-logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 24px; font-weight: 400; color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.nav-logo .ihit { position: relative; display: inline-block; }
+.nav-logo .ihit::before {
+  content: '';
+  position: absolute;
+  top: 1px; left: 50%;
+  transform: translateX(-50%);
+  width: 8px; height: 8px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23c8447a' stroke-width='1.4'%3E%3Cellipse cx='8' cy='3.5' rx='1.6' ry='3'/%3E%3Cellipse cx='8' cy='12.5' rx='1.6' ry='3'/%3E%3Cellipse cx='3.5' cy='8' rx='3' ry='1.6'/%3E%3Cellipse cx='12.5' cy='8' rx='3' ry='1.6'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat;
+}
+.nav-logo i { font-style: normal; visibility: hidden; }
+.nav-links { display: flex; gap: 36px; }
+.nav-links a {
+  font-size: 13px; font-weight: 400; color: var(--slate); text-decoration: none;
+  letter-spacing: 0; transition: color .15s;
+}
+.nav-links a:hover { color: var(--ink); }
+.nav-btn {
+  background: var(--fuchsia); color: var(--white); border: none;
+  padding: 10px 22px; border-radius: 999px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  letter-spacing: 0; cursor: pointer; transition: background .15s, transform .15s;
+  text-decoration: none; display: inline-block;
+}
+.nav-btn:hover { background: var(--fuchsia-deep); }
+
+/* ── LAYOUT ── */
+.section { padding: 120px 56px; }
+.section-tight { padding: 88px 56px; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+.wrap-narrow { max-width: 760px; margin: 0 auto; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 0 56px; }
+.bg-cream { background: var(--cream-soft); }
+
+/* ── KICKER ── */
+.kicker {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--fuchsia); margin-bottom: 24px;
+}
+.kicker::before {
+  content: ''; width: 22px; height: 1px; background: var(--fuchsia);
+}
+.kicker.center { justify-content: center; }
+.kicker.center::after {
+  content: ''; width: 22px; height: 1px; background: var(--fuchsia);
+}
+
+/* ── HEADINGS ── */
+.h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(48px, 6vw, 80px);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  font-weight: 400;
+  margin-bottom: 28px;
+}
+.h1 em { color: var(--fuchsia); }
+.h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(36px, 4vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 18px;
+  font-weight: 400;
+}
+.h2 em { color: var(--fuchsia); }
+.h2-center { text-align: center; }
+.h3 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 24px; color: var(--ink);
+  margin-bottom: 10px; font-weight: 400;
+  line-height: 1.15; letter-spacing: -0.01em;
+}
+.lead {
+  font-size: 18px; font-weight: 400; color: var(--slate);
+  line-height: 1.65; margin-bottom: 36px; max-width: 520px;
+}
+.body { font-size: 15px; font-weight: 400; color: var(--slate); line-height: 1.7; }
+
+/* ── BUTTONS ── */
+.btn-fuchsia {
+  background: var(--fuchsia); color: var(--white); border: none;
+  padding: 14px 28px; border-radius: 999px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+  letter-spacing: 0; cursor: pointer; transition: background .15s, transform .15s;
+  text-decoration: none; display: inline-block;
+}
+.btn-fuchsia:hover { background: var(--fuchsia-deep); transform: translateY(-1px); }
+.btn-outline {
+  background: transparent; color: var(--ink);
+  border: 1px solid var(--border); padding: 14px 24px; border-radius: 999px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 400;
+  cursor: pointer; transition: border-color .15s, color .15s;
+  text-decoration: none; display: inline-block;
+}
+.btn-outline:hover { border-color: var(--ink); }
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.btn-note { font-size: 13px; color: var(--slate-lt); margin-top: 14px; }
+
+/* ──────────────────────────────
+   §1 HERO
+────────────────────────────── */
+.hero {
+  display: grid; grid-template-columns: 1.05fr 1fr;
+  min-height: 88vh; align-items: center;
+  position: relative;
+  background: var(--white);
+}
+.hero-left { padding: 80px 32px 80px 56px; position: relative; z-index: 2; }
+.hero-right {
+  padding: 56px 56px 56px 32px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+
+/* DAHLIA HERO ACCENT */
+.hero-bloom {
+  position: absolute;
+  top: 24px; right: -40px;
+  width: 280px; height: 280px;
+  background-image: url('marginosa/dahlia.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.92;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 12px 36px rgba(200,68,122,0.12));
+}
+
+/* PREVIEW CARD */
+.preview-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  width: 100%; max-width: 420px;
+  box-shadow: 0 28px 70px -20px rgba(26,26,26,0.12), 0 6px 16px -8px rgba(26,26,26,0.06);
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+}
+.pc-bar {
+  background: var(--white);
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.pc-bar-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--slate-lt);
+  letter-spacing: 0.04em;
+}
+.pc-live {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--leaf); font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.pc-live::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--leaf);
+  animation: pulse 2s ease infinite;
+}
+@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.35 } }
+.pc-body { padding: 18px; }
+.pc-section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; font-weight: 500; color: var(--slate-lt);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.pc-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 0; border-bottom: 1px solid var(--border-soft);
+}
+.pc-row:last-of-type { border-bottom: none; }
+.pc-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; color: var(--ink); font-weight: 500;
+}
+.pc-msrp {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--slate-lt); margin-top: 2px;
+}
+.badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  padding: 3px 10px; border-radius: 999px;
+  letter-spacing: 0;
+}
+.b-good  { background: var(--leaf-soft);     color: var(--leaf); }
+.b-warn  { background: var(--marigold-sf);   color: var(--marigold-dp); }
+.b-alert { background: var(--zinnia-soft);   color: var(--zinnia); }
+
+.pc-sep { height: 1px; background: var(--border); margin: 12px 0; }
+.pc-stat { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.pc-stat-l {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; color: var(--slate-lt);
+}
+.pc-stat-v {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--ink); font-weight: 500;
+}
+.pc-stat-v.good { color: var(--leaf); }
+.pc-alert {
+  background: var(--marigold-sf);
+  border-radius: 8px;
+  padding: 10px 12px; margin-top: 12px;
+}
+.pc-alert-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; color: var(--marigold-dp); font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 6px;
+}
+.pc-alert-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.pc-alert-stem {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; color: var(--ink);
+}
+.pc-alert-action {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--marigold-dp); font-weight: 500;
+}
+
+/* PROOF STRIP */
+.proof {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: grid; grid-template-columns: repeat(4,1fr);
+  padding: 36px 56px;
+  background: var(--white);
+}
+.proof-item { text-align: center; padding: 4px 16px; border-right: 1px solid var(--border); }
+.proof-item:last-child { border-right: none; }
+.proof-n {
+  font-family: 'Instrument Serif', serif;
+  font-size: 36px; font-weight: 400; letter-spacing: -0.02em;
+  color: var(--ink); margin-bottom: 6px; line-height: 1;
+}
+.proof-n em { color: var(--fuchsia); }
+.proof-l {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; color: var(--slate); line-height: 1.5;
+}
+
+/* ──────────────────────────────
+   §2 PROBLEM
+────────────────────────────── */
+.pain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 88px; align-items: start; }
+.pain-list { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+.pain-item {
+  display: flex; gap: 18px; align-items: flex-start;
+  padding: 24px 26px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--white);
+  transition: border-color .2s;
+}
+.pain-item:hover { border-color: var(--fuchsia-soft); }
+.pain-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--fuchsia-soft);
+  color: var(--fuchsia);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; flex-shrink: 0; font-weight: 500;
+}
+.pain-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 19px; font-weight: 400;
+  color: var(--ink); margin-bottom: 4px;
+  letter-spacing: -0.01em; line-height: 1.2;
+}
+.pain-body {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--slate); line-height: 1.6;
+}
+
+.bridge-hook {
+  margin-top: 40px; padding: 28px 28px 28px 32px;
+  background: var(--cream-soft);
+  border-left: 2px solid var(--fuchsia);
+  border-radius: 0 12px 12px 0;
+}
+.bridge-hook .quote {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic; font-weight: 400;
+  font-size: 22px; line-height: 1.4;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.bridge-hook .attr {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--slate-lt);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* ──────────────────────────────
+   §3 SOLUTION BRIDGE
+────────────────────────────── */
+.before-after {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  margin-top: 64px;
+}
+.ba-col {
+  padding: 36px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--white);
+}
+.ba-col.after { border-color: var(--fuchsia-soft); position: relative; }
+.ba-col.after::before {
+  content: '';
+  position: absolute; top: -1px; left: -1px; right: -1px;
+  height: 3px;
+  background: var(--fuchsia);
+  border-radius: 14px 14px 0 0;
+}
+.ba-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.ba-col.before .ba-label { color: var(--slate-lt); }
+.ba-col.after .ba-label { color: var(--fuchsia); }
+.ba-list { display: flex; flex-direction: column; gap: 12px; }
+.ba-item { font-size: 14px; display: flex; gap: 12px; line-height: 1.55; align-items: flex-start; }
+.ba-col.before .ba-item { color: var(--slate); }
+.ba-col.before .ba-item::before {
+  content: '×'; color: var(--slate-lt); flex-shrink: 0;
+  font-size: 14px; width: 14px;
+}
+.ba-col.after .ba-item { color: var(--ink); }
+.ba-col.after .ba-item::before {
+  content: '✓'; color: var(--fuchsia); flex-shrink: 0;
+  font-size: 13px; font-weight: 600; width: 14px;
+}
+
+.bridge-intro {
+  text-align: center; margin-top: 64px;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic; font-weight: 400;
+  font-size: 30px; color: var(--ink); line-height: 1.35;
+  letter-spacing: -0.005em;
+  max-width: 720px; margin-left: auto; margin-right: auto;
+}
+.bridge-intro .brand {
+  font-style: normal; font-family: 'Instrument Serif', serif;
+  color: var(--fuchsia); font-weight: 400;
+}
+.bridge-cta { display: flex; justify-content: center; margin-top: 32px; gap: 12px; flex-wrap: wrap; }
+
+/* ──────────────────────────────
+   §4 FEATURES
+────────────────────────────── */
+.features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 64px; }
+.feature-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 36px;
+  transition: border-color .2s, transform .2s;
+}
+.feature-card:hover { border-color: var(--fuchsia-soft); transform: translateY(-2px); }
+.feature-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--fuchsia); margin-bottom: 14px;
+}
+.feature-card h3 { margin-bottom: 12px; font-size: 24px; }
+.phase-card {
+  background: var(--cream-soft);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 36px;
+  position: relative;
+}
+.phase-badge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--marigold-dp); background: var(--marigold-sf);
+  padding: 4px 10px; border-radius: 999px;
+  margin-bottom: 14px;
+}
+
+/* ──────────────────────────────
+   §5 SOCIAL PROOF
+────────────────────────────── */
+.testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 64px; }
+.testi {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 32px;
+}
+.testi-quote {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic; font-weight: 400;
+  font-size: 19px; line-height: 1.45;
+  color: var(--ink); margin-bottom: 22px;
+  letter-spacing: -0.005em;
+}
+.testi-quote::before {
+  content: '\201C';
+  color: var(--fuchsia);
+  font-style: italic;
+  font-size: 32px;
+  line-height: 0; vertical-align: -10px; margin-right: 4px;
+}
+.testi-attr {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--slate-lt);
+}
+
+.stats-strip {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  margin-top: 64px;
+}
+.stat-block { background: var(--white); padding: 40px; text-align: center; }
+.stat-n {
+  font-family: 'Instrument Serif', serif;
+  font-size: 48px; font-weight: 400; letter-spacing: -0.025em;
+  color: var(--ink); margin-bottom: 8px; line-height: 1;
+}
+.stat-n .accent { color: var(--fuchsia); }
+.stat-l {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px; color: var(--slate); line-height: 1.5;
+}
+
+/* ──────────────────────────────
+   §6 HOW IT WORKS
+────────────────────────────── */
+.steps-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 64px;
+}
+.step { background: var(--white); padding: 48px 36px; }
+.step-n {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic; font-weight: 400;
+  font-size: 64px; color: var(--fuchsia);
+  line-height: 1; margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+.step h3 { margin-bottom: 12px; font-size: 22px; }
+.step .body strong { color: var(--ink); font-weight: 600; }
+
+/* ──────────────────────────────
+   §7 PRICING
+────────────────────────────── */
+.pricing-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  margin-top: 56px; max-width: 920px; margin-left: auto; margin-right: auto;
+}
+.pricing-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 44px;
+}
+.pricing-card.featured {
+  border: 1px solid var(--fuchsia-soft);
+  position: relative;
+  box-shadow: 0 12px 40px -12px rgba(200,68,122,0.15);
+}
+.pricing-card.featured::before {
+  content: '';
+  position: absolute; top: -1px; left: -1px; right: -1px;
+  height: 3px;
+  background: var(--fuchsia);
+  border-radius: 16px 16px 0 0;
+}
+.pc-tier {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  margin-bottom: 12px; color: var(--slate);
+}
+.pricing-card.featured .pc-tier { color: var(--fuchsia); }
+.pc-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 32px; font-weight: 400; letter-spacing: -0.01em;
+  color: var(--ink); margin-bottom: 24px; line-height: 1.05;
+}
+.pc-price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
+.pc-amt {
+  font-family: 'Instrument Serif', serif;
+  font-size: 56px; font-weight: 400; letter-spacing: -0.025em;
+  color: var(--ink); line-height: 1;
+}
+.pc-per {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; color: var(--slate); font-weight: 400;
+}
+.pc-setup {
+  font-size: 13px; color: var(--slate-lt);
+  padding-bottom: 24px; margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.pricing-card.featured .pc-setup { border-color: var(--fuchsia-soft); }
+.pc-feats { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+.pc-feat {
+  display: flex; gap: 12px; font-size: 14px; font-weight: 400;
+  color: var(--slate); line-height: 1.5;
+}
+.pc-feat .ck { color: var(--fuchsia); font-weight: 600; flex-shrink: 0; }
+.pc-feat .ck-n { color: var(--slate-lt); flex-shrink: 0; }
+.pc-cta {
+  width: 100%; padding: 14px;
+  border-radius: 999px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  letter-spacing: 0; cursor: pointer;
+  text-decoration: none; display: block; text-align: center;
+  transition: all .15s; border: none;
+}
+.pc-cta.free { border: 1px solid var(--border); background: var(--white); color: var(--ink); }
+.pc-cta.free:hover { border-color: var(--ink); }
+.pc-cta.paid { background: var(--fuchsia); color: var(--white); }
+.pc-cta.paid:hover { background: var(--fuchsia-deep); }
+
+.anchor-box {
+  background: var(--cream);
+  border-radius: 12px;
+  padding: 24px 32px;
+  margin: 36px auto 0;
+  font-family: 'Instrument Serif', serif;
+  font-size: 19px; font-style: italic;
+  color: var(--ink); line-height: 1.5; text-align: center;
+  max-width: 760px;
+}
+.anchor-box em { font-style: italic; color: var(--fuchsia); }
+
+.guarantee {
+  text-align: center; margin-top: 32px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px; color: var(--slate); line-height: 1.7;
+}
+.guarantee strong { color: var(--ink); font-weight: 600; }
+
+/* ──────────────────────────────
+   §8 FAQ
+────────────────────────────── */
+.faq-list {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--border); border-radius: 14px;
+  overflow: hidden; margin-top: 64px;
+}
+.faq-item { border-bottom: 1px solid var(--border); background: var(--white); }
+.faq-item:last-child { border-bottom: none; }
+.faq-q {
+  width: 100%; padding: 24px 32px; text-align: left;
+  background: none; border: none; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: 19px; font-weight: 400; letter-spacing: -0.01em;
+  color: var(--ink); transition: background .15s;
+  line-height: 1.3;
+}
+.faq-q:hover { background: var(--cream-soft); }
+.faq-q.open { color: var(--fuchsia); }
+.faq-icon {
+  font-size: 22px; font-weight: 300; color: var(--slate-lt);
+  flex-shrink: 0; margin-left: 16px;
+  transition: transform .25s, color .15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.faq-q.open .faq-icon { transform: rotate(45deg); color: var(--fuchsia); }
+.faq-a {
+  display: none; padding: 0 32px 26px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14.5px; font-weight: 400; color: var(--slate);
+  line-height: 1.7;
+}
+.faq-a.open { display: block; }
+
+/* ──────────────────────────────
+   §9 FINAL CTA
+────────────────────────────── */
+.final-cta {
+  padding: 120px 56px 100px;
+  text-align: center;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.final-cta-bloom {
+  position: absolute;
+  bottom: -40px; right: -60px;
+  width: 220px; height: 220px;
+  background-image: url('marginosa/dahlia.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+  pointer-events: none;
+  transform: rotate(15deg);
+}
+
+.final-cta .h2 { margin-bottom: 18px; position: relative; z-index: 2; }
+.final-cta .body { max-width: 500px; margin: 18px auto 36px; font-size: 16px; position: relative; z-index: 2; }
+.final-cta .signature {
+  font-family: 'Caveat', cursive;
+  font-size: 28px; color: var(--fuchsia);
+  margin-bottom: 12px;
+  font-weight: 500;
+  position: relative; z-index: 2;
+}
+.final-cta .btn-row { position: relative; z-index: 2; }
+.final-note { font-size: 13px; color: var(--slate-lt); margin-top: 18px; position: relative; z-index: 2; }
+
+/* ──────────────────────────────
+   FOOTER
+────────────────────────────── */
+footer {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  padding: 36px 56px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-brand {
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px; font-weight: 400; color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.footer-brand .ihit { position: relative; display: inline-block; }
+.footer-brand .ihit::before {
+  content: '';
+  position: absolute;
+  top: 1px; left: 50%;
+  transform: translateX(-50%);
+  width: 7px; height: 7px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23c8447a' stroke-width='1.4'%3E%3Cellipse cx='8' cy='3.5' rx='1.6' ry='3'/%3E%3Cellipse cx='8' cy='12.5' rx='1.6' ry='3'/%3E%3Cellipse cx='3.5' cy='8' rx='3' ry='1.6'/%3E%3Cellipse cx='12.5' cy='8' rx='3' ry='1.6'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat;
+}
+.footer-brand i { font-style: normal; visibility: hidden; }
+.footer-right {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--slate-lt);
+  letter-spacing: 0.06em;
+}
+
+/* ──────────────────────────────
+   PASSWORD GATE
+────────────────────────────── */
+#pw-gate {
+  position: fixed; inset: 0; z-index: 99999;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex; align-items: center; justify-content: center;
+}
+.pw-box {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 56px 44px 44px;
+  width: 340px; text-align: center;
+  box-shadow: 0 24px 60px -16px rgba(26,26,26,0.12);
+}
+.pw-name {
+  font-family: 'Instrument Serif', serif;
+  color: var(--ink);
+  font-size: 36px; font-weight: 400;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+.pw-name .ihit { position: relative; display: inline-block; }
+.pw-name .ihit::before {
+  content: '';
+  position: absolute;
+  top: 4px; left: 50%;
+  transform: translateX(-50%);
+  width: 11px; height: 11px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23c8447a' stroke-width='1.4'%3E%3Cellipse cx='8' cy='3.5' rx='1.6' ry='3'/%3E%3Cellipse cx='8' cy='12.5' rx='1.6' ry='3'/%3E%3Cellipse cx='3.5' cy='8' rx='3' ry='1.6'/%3E%3Cellipse cx='12.5' cy='8' rx='3' ry='1.6'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat;
+}
+.pw-name i { font-style: normal; visibility: hidden; }
+.pw-sub {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 15px; color: var(--slate-lt);
+  margin-bottom: 32px; letter-spacing: 0;
+}
+.pw-in {
+  width: 100%; padding: 13px;
+  background: var(--cream-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--ink); font-size: 14px;
+  font-family: 'DM Mono', monospace;
+  text-align: center; letter-spacing: 0.1em;
+  outline: none; margin-bottom: 12px;
+  transition: border-color .15s;
+}
+.pw-in:focus { border-color: var(--fuchsia); }
+.pw-in.shake { animation: shk .35s ease; border-color: var(--zinnia); }
+@keyframes shk { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+.pw-btn {
+  width: 100%; padding: 13px;
+  background: var(--fuchsia); border: none;
+  border-radius: 999px;
+  color: var(--white); font-size: 13px; font-weight: 500;
+  letter-spacing: 0; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: background .15s;
+}
+.pw-btn:hover { background: var(--fuchsia-deep); }
+.pw-err {
+  font-size: 12px; color: var(--zinnia);
+  margin-top: 10px; min-height: 18px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
+.kicker { animation: fadeUp .55s ease both; }
+.h1 { animation: fadeUp .55s .08s ease both; }
+.lead { animation: fadeUp .55s .14s ease both; }
+.btn-row { animation: fadeUp .55s .2s ease both; }
+.preview-card { animation: fadeUp .65s .12s ease both; }
+.hero-bloom { animation: fadeUp .8s .2s ease both; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 920px) {
+  .hero, .pain-grid, .before-after, .features-grid, .pricing-grid, .testi-grid, .steps-grid, .stats-strip {
+    grid-template-columns: 1fr;
+  }
+  .proof { grid-template-columns: 1fr 1fr; }
+  nav { padding: 0 24px; }
+  .nav-links { display: none; }
+  .section, .section-tight, .final-cta, footer { padding: 72px 24px; }
+  .hero-left, .hero-right { padding: 56px 24px; }
+  .proof { padding: 24px; }
+  .divider { margin: 0 24px; }
+  .hero-bloom { width: 160px; height: 160px; top: 16px; right: -30px; opacity: 0.6; }
+  .final-cta-bloom { width: 140px; height: 140px; opacity: 0.5; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-mark">
+      <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#c8447a" stroke-width="1.4">
+        <ellipse cx="14" cy="6" rx="2.6" ry="5"/>
+        <ellipse cx="14" cy="22" rx="2.6" ry="5"/>
+        <ellipse cx="6" cy="14" rx="5" ry="2.6"/>
+        <ellipse cx="22" cy="14" rx="5" ry="2.6"/>
+      </svg>
+    </div>
+    <div class="nav-logo">Marg<span class="ihit"><i>i</i></span>nosa</div>
+  </div>
+  <div class="nav-links">
+    <a href="#problem">The problem</a>
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/demo.html" target="_blank">Free demo</a>
+  </div>
+  <a href="#pricing" class="nav-btn">Get started</a>
+</nav>
+
+
+<!-- §1 HERO -->
+<section class="hero">
+  <div class="hero-bloom" aria-hidden="true"></div>
+
+  <div class="hero-left">
+    <div class="kicker">For independent flower shops</div>
+    <h1 class="h1">Turn pretty<br>arrangements into <em>pretty</em><br>profit margins.</h1>
+    <p class="lead">You got into flowers because you love them. Now you can run a shop that loves you back — with real-time margin data that works quietly in the background while you do what you do best.</p>
+    <div class="btn-row">
+      <a href="/demo.html" target="_blank" class="btn-fuchsia">See it with real shop data →</a>
+      <a href="#problem" class="btn-outline">See how it works</a>
+    </div>
+    <div class="btn-note">Free demo · real UpTowne Florist data · no signup required</div>
+  </div>
+
+  <div class="hero-right">
+    <div class="preview-card">
+      <div class="pc-bar">
+        <div class="pc-bar-name">Milano's UpTowne · Admin Pro Day</div>
+        <div class="pc-live">costs live</div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-section-label">Recipe Margin Summary</div>
+        <div class="pc-row"><div><div class="pc-name">As Good As Gold</div><div class="pc-msrp">$55 msrp</div></div><span class="badge b-good">4.3×</span></div>
+        <div class="pc-row"><div><div class="pc-name">Thanks For All You Do!</div><div class="pc-msrp">$45 msrp</div></div><span class="badge b-good">5.2×</span></div>
+        <div class="pc-row"><div><div class="pc-name">Make 'Em Smile</div><div class="pc-msrp">$40 msrp</div></div><span class="badge b-warn">3.1×</span></div>
+        <div class="pc-row"><div><div class="pc-name">Cheerful Yellow</div><div class="pc-msrp">$60 msrp</div></div><span class="badge b-alert">1.3×</span></div>
+        <div class="pc-row"><div><div class="pc-name">Beautiful Life</div><div class="pc-msrp">$50 msrp</div></div><span class="badge b-alert">1.8×</span></div>
+        <div class="pc-sep"></div>
+        <div class="pc-stat"><span class="pc-stat-l">Waxflower · USDA benchmark</span><span class="pc-stat-v">$14.50–18.00/bunch</span></div>
+        <div class="pc-stat"><span class="pc-stat-l">Your Budzi cost · auto-matched</span><span class="pc-stat-v good">$10.10 ✓</span></div>
+        <div class="pc-alert">
+          <div class="pc-alert-label">Aging alert · act today</div>
+          <div class="pc-alert-row"><span class="pc-alert-stem">Roses (red) · 6 stems · 1 day left</span><span class="pc-alert-action">mark down → $0.55</span></div>
+          <div class="pc-alert-row"><span class="pc-alert-stem">Ranunculus · 8 stems · 2 days left</span><span class="pc-alert-action">feature as daily special</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- PROOF STRIP -->
+<div class="proof">
+  <div class="proof-item"><div class="proof-n"><em>4×</em></div><div class="proof-l">the markup target most shops miss</div></div>
+  <div class="proof-item"><div class="proof-n">40+</div><div class="proof-l">stem varieties tracked weekly, automatically</div></div>
+  <div class="proof-item"><div class="proof-n">48 hrs</div><div class="proof-l">heads up before stems go to waste</div></div>
+  <div class="proof-item"><div class="proof-n">$0</div><div class="proof-l">to try it · no signup, no catch</div></div>
+</div>
+
+
+<!-- §2 PROBLEM -->
+<section class="section" id="problem">
+  <div class="wrap">
+    <div class="pain-grid">
+      <div>
+        <div class="kicker">Sound familiar?</div>
+        <h2 class="h2">Running a flower shop is <em>harder</em> than it looks.</h2>
+        <p class="body" style="margin-bottom: 16px; font-size: 16px;">The design part? You've got that. It's everything around it — the pricing, the waste, the holiday ordering, the invoices from four different vendors — that quietly chips away at what should be a great business.</p>
+        <p class="body" style="font-size: 16px;">You shouldn't need an accounting degree to know if your shop is actually making money.</p>
+        <div class="bridge-hook">
+          <p class="quote">I always assumed Cheerful Yellow was profitable. Turns out I was selling it at a 1.3× markup.</p>
+          <div class="attr">UpTowne Florist · Powell, OH</div>
+        </div>
+      </div>
+      <div>
+        <div class="pain-list">
+          <div class="pain-item">
+            <div class="pain-icon">01</div>
+            <div>
+              <div class="pain-title">Spreadsheets that are always out of date</div>
+              <div class="pain-body">Flower prices move every week. That cost sheet you built in January? It's already wrong. And manually updating it is no one's idea of a good Tuesday morning.</div>
+            </div>
+          </div>
+          <div class="pain-item">
+            <div class="pain-icon">02</div>
+            <div>
+              <div class="pain-title">Holiday inventory is always feast or famine</div>
+              <div class="pain-body">Too many stems before Valentine's Day. Not enough for Mother's Day. The swings feel unavoidable — but they're not. You just need the right data a few weeks before the order.</div>
+            </div>
+          </div>
+          <div class="pain-item">
+            <div class="pain-icon">03</div>
+            <div>
+              <div class="pain-title">Beautiful flowers going in the compost</div>
+              <div class="pain-body">Every stem you throw away is money you already spent. Most shops lose 10–15% of their weekly inventory to waste. It adds up to thousands of dollars a year — quietly, every week.</div>
+            </div>
+          </div>
+          <div class="pain-item">
+            <div class="pain-icon">04</div>
+            <div>
+              <div class="pain-title">Tools that don't talk to each other</div>
+              <div class="pain-body">Your POS does one thing. Your invoices live in email. Your recipes are on paper or in a folder somewhere. Nothing connects. You're the one connecting it all, by hand, all the time.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- §3 SOLUTION BRIDGE -->
+<hr class="divider">
+<section class="section-tight bg-cream">
+  <div class="wrap">
+    <div class="kicker center">The solution</div>
+    <h2 class="h2 h2-center">What your shop feels like when the <em>numbers</em> work for you.</h2>
+    <div class="before-after">
+      <div class="ba-col before">
+        <div class="ba-label">Before Marginosa</div>
+        <div class="ba-list">
+          <div class="ba-item">Guessing which arrangements are profitable</div>
+          <div class="ba-item">Typing in flower costs manually — when you remember</div>
+          <div class="ba-item">Finding out about price spikes after you've already ordered</div>
+          <div class="ba-item">Watching stems hit vase-life-end without a plan to sell them</div>
+          <div class="ba-item">Recipe cards with no cost data for your designers</div>
+        </div>
+      </div>
+      <div class="ba-col after">
+        <div class="ba-label">After Marginosa</div>
+        <div class="ba-list">
+          <div class="ba-item">Live markup multiple on every arrangement, always current</div>
+          <div class="ba-item">Costs auto-update every time you forward a supplier invoice</div>
+          <div class="ba-item">USDA benchmark alerts you when wholesale prices shift</div>
+          <div class="ba-item">48-hour alerts with a suggested markdown price before waste happens</div>
+          <div class="ba-item">Printable recipe cards your team already knows how to use</div>
+        </div>
+      </div>
+    </div>
+    <div class="bridge-intro"><span class="brand">Marginosa</span> connects the dots quietly, so you can focus on the flowers.</div>
+    <div class="bridge-cta">
+      <a href="/demo.html" target="_blank" class="btn-fuchsia">See the free demo →</a>
+      <a href="#how" class="btn-outline">How it works</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- §4 FEATURES -->
+<hr class="divider">
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="kicker">Features &amp; benefits</div>
+    <h2 class="h2">The four things that <em>actually</em> move margins.</h2>
+    <p class="body" style="max-width:560px; font-size:16px;">Plus two more coming — one that turns waste into cash flow, and one that nobody in this industry has built for independent shops yet.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-tag">Live Costing</div>
+        <h3>Live profit on every arrangement</h3>
+        <p class="body">Every design shows its ingredient cost, markup multiple (target: 4×), and gross margin %. Arrangements below the 3× floor flag with a minimum suggested price. See the whole collection in one view — updated every time a new invoice comes in.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Invoice Intelligence</div>
+        <h3>Your invoices do the work for you</h3>
+        <p class="body">Forward invoices to your shop's unique email address. We parse vendor PDFs — Budzi, Cleveland Plant &amp; Flower, Asiri Blooms — match line items to your recipe ingredients, and update costs automatically. No manual entry after setup.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Market Data</div>
+        <h3>Real market prices, updated every week</h3>
+        <p class="body">We pull the USDA AMS Boston Terminal Market report (BH_FV201) every week. 40+ stem varieties. When your invoice costs deviate from the national benchmark, you see it — before your next order, not after the margin disappears.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Operations</div>
+        <h3>Recipe cards your team can actually use</h3>
+        <p class="body">Your designers need paper. Every arrangement prints as a clean recipe card with ingredients and quantities in the format your team already uses. The margin data runs in the background. They see the recipe. You see the profit.</p>
+      </div>
+      <div class="phase-card">
+        <div class="phase-badge">Coming · Phase 2</div>
+        <div class="feature-tag">Waste Recovery</div>
+        <h3>Turn aging inventory into same-day revenue</h3>
+        <p class="body">When stems hit the 48-hour window, the system calculates a markdown price that still protects your margin and auto-generates a "Today's Special" you can push to your website or customer text list. Waste becomes cash flow before it hits the compost.</p>
+      </div>
+      <div class="phase-card">
+        <div class="phase-badge">Coming · Phase 3</div>
+        <div class="feature-tag">Petal Network</div>
+        <h3>Distribute aging stems to local B2B buyers</h3>
+        <p class="body">A lightweight marketplace connecting shops with restaurants, hotels, offices, and studios for same-day or next-day stem distribution. You clear inventory at margin. They get fresh flowers cheaper than calling a wholesaler. Nobody has built this for independents.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- §5 SOCIAL PROOF -->
+<hr class="divider">
+<section class="section-tight bg-cream">
+  <div class="wrap">
+    <div class="kicker center">Early beta</div>
+    <h2 class="h2 h2-center">What florists say when they first see <em>their</em> numbers.</h2>
+    <div class="testi-grid">
+      <div class="testi">
+        <p class="testi-quote">I always thought Cheerful Yellow was one of our stronger sellers. It turns out we're running 1.3× on ingredient costs. I would never have caught that on my own.</p>
+        <div class="testi-attr">Shop owner · Columbus, OH · beta</div>
+      </div>
+      <div class="testi">
+        <p class="testi-quote">The invoice import is what sold me. I forwarded the PDF and two of my arrangements updated costs automatically. That's hours of Tuesday morning back, every week.</p>
+        <div class="testi-attr">Owner, independent florist · beta</div>
+      </div>
+      <div class="testi">
+        <p class="testi-quote">My lead designer said the recipe card looks just like what we already use, just cleaner. She doesn't see the cost data. It just runs. That's exactly what I needed.</p>
+        <div class="testi-attr">Shop owner · Powell, OH · beta</div>
+      </div>
+    </div>
+    <div class="stats-strip">
+      <div class="stat-block">
+        <div class="stat-n"><span class="accent">8–15%</span></div>
+        <div class="stat-l">of weekly inventory most shops quietly compost</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-n"><span class="accent">4× rule</span></div>
+        <div class="stat-l">the markup that turns a flower shop into a real business</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-n"><span class="accent">$6–10K</span></div>
+        <div class="stat-l">what that wasted inventory costs a typical shop every year</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- §6 HOW IT WORKS -->
+<hr class="divider">
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="kicker">How it works</div>
+    <h2 class="h2">Up and running in <em>one week.</em></h2>
+    <p class="body" style="max-width:560px; font-size:16px;">No IT project. No switching your POS. One setup session with us, and after that it takes care of itself — costs update automatically every time a new invoice comes in.</p>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-n">01</div>
+        <h3>We connect your invoices</h3>
+        <p class="body">Send us a few recent invoices from your suppliers. <strong>We do the matching work — every ingredient gets a real cost from your actual orders.</strong> One session, and that part is done.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">02</div>
+        <h3>Your arrangements come alive</h3>
+        <p class="body">Your existing recipes load with real costs attached. <strong>Every arrangement shows its live margin — and anything that's underpriced flags immediately</strong> with a suggested price that works.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">03</div>
+        <h3>It keeps itself current</h3>
+        <p class="body">Forward new invoices to your shop's private email address. Costs update on their own within 24 hours. USDA wholesale prices update weekly. <strong>You open it Monday morning and the numbers are already done.</strong></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- §7 PRICING -->
+<hr class="divider">
+<section class="section-tight bg-cream" id="pricing">
+  <div class="wrap">
+    <div class="kicker center">Pricing</div>
+    <h2 class="h2 h2-center">One flat fee. <em>No</em> percentages. <em>No</em> surprises.</h2>
+
+    <div class="anchor-box">
+      Most florists spend more than $200 a month on flowers that end up in the compost. <em>Marginosa</em> pays for itself the first time it catches an arrangement you've been underpricing — which usually happens in the first week.
+    </div>
+
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pc-tier">Free · no signup needed</div>
+        <div class="pc-name">Demo</div>
+        <div class="pc-price"><span class="pc-amt" style="font-size:48px;">$0</span></div>
+        <div class="pc-setup">Open in your browser right now</div>
+        <div class="pc-feats">
+          <div class="pc-feat"><span class="ck">✓</span> Interactive demo with real UpTowne Florist data</div>
+          <div class="pc-feat"><span class="ck">✓</span> All four tabs · recipe analyzer, invoice feed, market prices</div>
+          <div class="pc-feat"><span class="ck">✓</span> Current USDA wholesale price reference</div>
+          <div class="pc-feat"><span class="ck-n">○</span> <span style="opacity:.45;">Your shop's actual data</span></div>
+          <div class="pc-feat"><span class="ck-n">○</span> <span style="opacity:.45;">Invoice auto-import</span></div>
+          <div class="pc-feat"><span class="ck-n">○</span> <span style="opacity:.45;">Live cost updates</span></div>
+        </div>
+        <a href="/demo.html" target="_blank" class="pc-cta free">Open the free demo →</a>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="pc-tier">Full access · your shop</div>
+        <div class="pc-name">Marginosa</div>
+        <div class="pc-price"><span class="pc-amt">$200</span><span class="pc-per">/month</span></div>
+        <div class="pc-setup">+ $1,500 one-time setup fee</div>
+        <div class="pc-feats">
+          <div class="pc-feat"><span class="ck">✓</span> Full setup: invoice import, recipe mapping, cost baseline</div>
+          <div class="pc-feat"><span class="ck">✓</span> Your arrangements, your collections, your data</div>
+          <div class="pc-feat"><span class="ck">✓</span> Automatic invoice import via email forwarding</div>
+          <div class="pc-feat"><span class="ck">✓</span> USDA price benchmarks · updated weekly, automatically</div>
+          <div class="pc-feat"><span class="ck">✓</span> Margin alerts when recipes fall below 3× floor</div>
+          <div class="pc-feat"><span class="ck">✓</span> Printable recipe cards for your design room</div>
+          <div class="pc-feat"><span class="ck">✓</span> Phase 2 waste recovery features when available</div>
+        </div>
+        <button class="pc-cta paid" onclick="alert('Ready to talk? Email us and we will get your setup scheduled within the week.')">Talk to us about setup</button>
+      </div>
+    </div>
+
+    <div class="guarantee">
+      <strong>Month-to-month. No contracts. Cancel any time.</strong><br>
+      The $1,500 setup fee covers your invoice import session, recipe mapping, and configuration. Most shops are live within one week.
+    </div>
+  </div>
+</section>
+
+
+<!-- §8 FAQ -->
+<hr class="divider">
+<section class="section">
+  <div class="wrap-narrow">
+    <div class="kicker center">Common questions</div>
+    <h2 class="h2 h2-center">Questions we hear before <em>every</em> setup call.</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Do I have to switch my POS system?<span class="faq-icon">+</span></button>
+        <div class="faq-a">No. Marginosa sits on top of whatever system you already use — FloristWare, Hana, QuickFlora, Square, even paper. We are not a POS. We are the profit intelligence layer that connects your invoices to your recipes. Your POS records what happened; we tell you what to do about it.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What if I don't use QuickBooks or have a specific POS?<span class="faq-icon">+</span></button>
+        <div class="faq-a">No problem. The core data pipeline is your supplier invoices — PDFs or CSVs from Budzi, Cleveland Plant &amp; Flower, Asiri Blooms, Sam's Club, or whoever you buy from. You forward them to your shop's unique email address and we parse them. No POS connection required.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">How long does setup actually take?<span class="faq-icon">+</span></button>
+        <div class="faq-a">Most shops are fully live within one week. The setup session itself takes about 60–90 minutes: we import your recent invoices, map your ingredients to invoice line items, and configure your recipe library. After that, costs update on their own every time a new invoice arrives.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What if my invoice data is incomplete or messy?<span class="faq-icon">+</span></button>
+        <div class="faq-a">That is exactly the situation we designed for. The demo shows exactly this — some ingredients have costs, some are still waiting for invoice data. The system flags what is costed and what is not, so you know where your margins are solid and where you still need data. Incomplete is fine; you add invoices over time and the picture fills in.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Is this only for retail shops, or does it work for event florists too?<span class="faq-icon">+</span></button>
+        <div class="faq-a">Marginosa is built primarily for retail shops running daily standing inventory. If you are a wedding or event florist pricing proposals, EveryStem ($25/month) is genuinely excellent for that use case. We solve a different problem — the shop owner who needs to know whether her everyday inventory is making money week over week.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Can I cancel if it is not working for me?<span class="faq-icon">+</span></button>
+        <div class="faq-a">Yes, month-to-month, cancel any time, no questions asked. The $1,500 setup fee is non-refundable because it covers real human time — your invoice import session and recipe mapping. But the $200/month retainer has no commitment. If it is not delivering value, you stop.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- §9 FINAL CTA -->
+<section class="final-cta">
+  <div class="final-cta-bloom" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="kicker center">Ready when you are</div>
+    <div class="signature">Pretty flowers.</div>
+    <h2 class="h2"><em>Profitable</em> shop.</h2>
+    <p class="body">Try the demo · it's free, it's real data from a real flower shop, and it takes about three minutes to see if this is for you.</p>
+    <div class="btn-row" style="justify-content:center;">
+      <a href="/demo.html" target="_blank" class="btn-fuchsia">Open the free demo →</a>
+      <a href="#pricing" class="btn-outline">Talk to us about setup</a>
+    </div>
+    <div class="final-note">No credit card. No account. Just the demo.</div>
+  </div>
+</section>
+
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">Marg<span class="ihit"><i>i</i></span>nosa</div>
+  <div class="footer-right">$1,500 setup · $200/month · No contracts · © 2026</div>
+</footer>
+
+
+<!-- PASSWORD GATE -->
+<div id="pw-gate">
+  <div class="pw-box">
+    <div class="pw-name">Marg<span class="ihit"><i>i</i></span>nosa</div>
+    <div class="pw-sub">private preview</div>
+    <input type="password" class="pw-in" id="pw-in" placeholder="enter password" onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="pw-btn" onclick="checkPw()">Enter</button>
+    <div class="pw-err" id="pw-err"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  if(sessionStorage.getItem('mg_auth')==='ok'){
+    document.addEventListener('DOMContentLoaded',function(){
+      var g=document.getElementById('pw-gate'); if(g) g.style.display='none';
+    });
+  }
+  window.checkPw=function(){
+    var v=document.getElementById('pw-in').value.trim();
+    if(v==='1234'){
+      sessionStorage.setItem('mg_auth','ok');
+      document.getElementById('pw-gate').style.display='none';
+    } else {
+      var i=document.getElementById('pw-in'), e=document.getElementById('pw-err');
+      i.classList.remove('shake'); void i.offsetWidth; i.classList.add('shake');
+      e.textContent='Wrong password.'; i.value='';
+    }
+  };
+})();
+
+function toggleFaq(btn) {
+  var answer = btn.nextElementSibling;
+  var isOpen = answer.classList.contains('open');
+  document.querySelectorAll('.faq-a').forEach(function(a){ a.classList.remove('open'); });
+  document.querySelectorAll('.faq-q').forEach(function(q){ q.classList.remove('open'); });
+  if (!isOpen) { answer.classList.add('open'); btn.classList.add('open'); }
+}
+</script>
+
+</body>
+</html>
