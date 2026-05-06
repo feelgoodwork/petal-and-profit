@@ -66,12 +66,17 @@ function ymd(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+type SortKey = 'times_sold' | 'total_revenue' | 'total_flower_cost' | 'margin_pct';
+type SortDir = 'asc' | 'desc';
+
 export default function SalesPage() {
   const [data, setData] = useState<SalesData | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [from, setFrom] = useState<string>('');
   const [to, setTo] = useState<string>('');
+  const [sortKey, setSortKey] = useState<SortKey>('times_sold');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
 
   async function fetchSales(fromVal: string, toVal: string) {
     const params = new URLSearchParams();
@@ -111,6 +116,33 @@ export default function SalesPage() {
     const start = new Date(today.getTime() - days * 86400000);
     setFrom(ymd(start));
     setTo(ymd(today));
+  }
+
+  function toggleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir(d => (d === 'desc' ? 'asc' : 'desc'));
+    } else {
+      setSortKey(key);
+      setSortDir('desc');
+    }
+  }
+
+  function sortedSellers(rows: TopSeller[]): TopSeller[] {
+    const dir = sortDir === 'asc' ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const av = a[sortKey] == null ? null : Number(a[sortKey]);
+      const bv = b[sortKey] == null ? null : Number(b[sortKey]);
+      // Push nulls to the bottom regardless of direction
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      return (av - bv) * dir;
+    });
+  }
+
+  function sortIndicator(key: SortKey): string {
+    if (key !== sortKey) return '';
+    return sortDir === 'desc' ? ' ↓' : ' ↑';
   }
 
   function marginColor(pct: number | null): string {
@@ -221,16 +253,36 @@ export default function SalesPage() {
                   <TableRow>
                     <TableHead>Arrangement</TableHead>
                     <TableHead>Recipe Match</TableHead>
-                    <TableHead className="text-right">Times Sold</TableHead>
+                    <TableHead
+                      className="text-right cursor-pointer select-none hover:text-stone-900"
+                      onClick={() => toggleSort('times_sold')}
+                    >
+                      Times Sold{sortIndicator('times_sold')}
+                    </TableHead>
                     <TableHead className="text-right">Avg Price</TableHead>
-                    <TableHead className="text-right">Total Revenue</TableHead>
-                    <TableHead className="text-right">Flower Cost</TableHead>
-                    <TableHead className="text-right">Margin</TableHead>
+                    <TableHead
+                      className="text-right cursor-pointer select-none hover:text-stone-900"
+                      onClick={() => toggleSort('total_revenue')}
+                    >
+                      Total Revenue{sortIndicator('total_revenue')}
+                    </TableHead>
+                    <TableHead
+                      className="text-right cursor-pointer select-none hover:text-stone-900"
+                      onClick={() => toggleSort('total_flower_cost')}
+                    >
+                      Flower Cost{sortIndicator('total_flower_cost')}
+                    </TableHead>
+                    <TableHead
+                      className="text-right cursor-pointer select-none hover:text-stone-900"
+                      onClick={() => toggleSort('margin_pct')}
+                    >
+                      Margin{sortIndicator('margin_pct')}
+                    </TableHead>
                     <TableHead className="text-right">Est. Total Profit</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.top_sellers.map((s, i) => {
+                  {sortedSellers(data.top_sellers).map((s, i) => {
                     const sold = Number(s.times_sold);
                     const avgPrice = s.avg_sale_price ? Number(s.avg_sale_price) : null;
                     const flowerCost = s.total_flower_cost ? Number(s.total_flower_cost) : null;
