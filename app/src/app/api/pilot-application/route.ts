@@ -97,32 +97,5 @@ export async function POST(request: Request) {
     RETURNING id
   `;
 
-  const pilotApplicationId = result[0]?.id ?? null;
-
-  const ghlUrl = process.env.GHL_WEBHOOK_URL;
-  if (ghlUrl) {
-    try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 5000);
-      const ghlRes = await fetch(ghlUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...row,
-          pilot_application_id: pilotApplicationId,
-          submitted_at: new Date().toISOString(),
-        }),
-        signal: ctrl.signal,
-      });
-      clearTimeout(timer);
-      if (!ghlRes.ok) {
-        const text = await ghlRes.text().catch(() => '');
-        console.error(`GHL webhook ${ghlRes.status} for application ${pilotApplicationId}: ${text}`);
-      }
-    } catch (err) {
-      console.error(`GHL webhook failed for application ${pilotApplicationId}:`, err);
-    }
-  }
-
-  return NextResponse.json({ ok: true, id: pilotApplicationId });
+  return NextResponse.json({ ok: true, id: result[0]?.id ?? null });
 }
